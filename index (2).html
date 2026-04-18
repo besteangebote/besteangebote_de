@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Besteangebote_de</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #1a1a1a;
+      --surface: #242424;
+      --card: #2d2d2d;
+      --border: #363636;
+      --accent: #e8621a;
+      --accent2: #c4501a;
+      --accent-glow: rgba(232,98,26,0.15);
+      --text: #f0ece4;
+      --muted: #888;
+      --radius: 12px;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      padding: 0 0 60px;
+    }
+    header {
+      text-align: center;
+      padding: 40px 24px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      top: -40px; left: 50%;
+      transform: translateX(-50%);
+      width: 500px; height: 260px;
+      background: radial-gradient(ellipse, rgba(232,98,26,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .logo-wrap { display: inline-block; margin-bottom: 10px; }
+    .logo-wrap img { height: 72px; width: auto; border-radius: 10px; display: block; }
+    header p.sub { margin-top: 8px; color: var(--muted); font-size: 14px; font-weight: 300; }
+    .divider { width: 50px; height: 2px; background: linear-gradient(90deg, var(--accent), transparent); margin: 16px auto 0; border-radius: 2px; }
+
+    .categories {
+      max-width: 640px;
+      margin: 28px auto 0;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .category {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.25s;
+      animation: fadeUp 0.35s ease both;
+    }
+    .category:nth-child(1) { animation-delay: 0.05s; }
+    .category:nth-child(2) { animation-delay: 0.10s; }
+    .category:nth-child(3) { animation-delay: 0.15s; }
+    .category:nth-child(4) { animation-delay: 0.20s; }
+    .category.open { border-color: rgba(232,98,26,0.4); }
+
+    .cat-header {
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px 18px; cursor: pointer; user-select: none;
+      transition: background 0.2s;
+    }
+    .cat-header:hover { background: rgba(255,255,255,0.03); }
+    .cat-icon {
+      font-size: 20px; width: 40px; height: 40px;
+      background: var(--card); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: background 0.2s;
+    }
+    .category.open .cat-icon { background: var(--accent-glow); }
+    .cat-title { flex: 1; }
+    .cat-title h2 { font-size: 15px; font-weight: 500; }
+    .cat-title small { font-size: 12px; color: var(--muted); font-weight: 300; }
+    .cat-arrow { font-size: 18px; color: var(--muted); transition: transform 0.3s, color 0.2s; }
+    .category.open .cat-arrow { transform: rotate(90deg); color: var(--accent); }
+
+    .cat-body { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1); }
+    .category.open .cat-body { max-height: 5000px; }
+
+    .products {
+      padding: 4px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* PRODUCT CARD WITH PHOTO */
+    .product {
+      background: var(--card);
+      border-radius: 10px;
+      border: 1px solid transparent;
+      transition: border-color 0.2s, background 0.2s;
+      overflow: hidden;
+    }
+    .product:hover { border-color: var(--border); background: #323232; }
+
+    .product-inner {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    /* FOTO */
+    .product-img {
+      width: 90px;
+      height: 90px;
+      flex-shrink: 0;
+      overflow: hidden;
+      background: #222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .product-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .product-img .no-img {
+      font-size: 28px;
+      opacity: 0.3;
+    }
+
+    .product-info {
+      flex: 1;
+      padding: 12px 14px;
+    }
+    .product-info .name { font-size: 14px; font-weight: 500; line-height: 1.4; }
+    .product-info .desc { font-size: 12px; color: var(--muted); margin-top: 3px; font-weight: 300; line-height: 1.4; }
+
+    .product-action {
+      padding: 12px 14px 12px 0;
+      flex-shrink: 0;
+    }
+    .btn-amazon {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 13px;
+      border-radius: 8px;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-amazon:hover { background: var(--accent2); transform: scale(1.03); }
+
+    footer { text-align: center; margin-top: 48px; font-size: 11px; color: #444; padding: 0 20px; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 480px) {
+      .product-img { width: 75px; height: 75px; }
+      .product-info .name { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-wrap">
+    <img src="data:image/jpeg;base64,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" alt="Besteangebote_de"/>
+  </div>
+  <p class="sub">Meine liebsten Produkte – kuratiert für euch 🛍️</p>
+  <div class="divider"></div>
+</header>
+
+<div class="categories">
+
+  <!-- ============================================================
+       SI TË SHTOSH PRODUKT TË RI:
+       Kopjo bllokun e mëposhtëm dhe ndrysho:
+       - data-img="URL E FOTOS"  ← linku i fotos nga Amazon
+       - .name → emri i produktit
+       - .desc → përshkrimi
+       - href="..." → linku yt Amazon affiliate
+  ============================================================ -->
+
+  <!-- KÜCHE -->
+  <div class="category" id="cat-kueche">
+    <div class="cat-header" onclick="toggle('cat-kueche')">
+      <div class="cat-icon">🍳</div>
+      <div class="cat-title"><h2>Küche</h2><small>Kochen, Backen & mehr</small></div>
+      <span class="cat-arrow">›</span>
+    </div>
+    <div class="cat-body">
+      <div class="products">
+
+        <div class="product">
+          <div class="product-inner">
+            <div class="product-img" data-img="URL-FOTO-PRODUKTI-KETU">
+              <span class="no-img">🛒</span>
+            </div>
+            <div class="product-info">
+              <div class="name">Produktname hier</div>
+              <div class="desc">Kurze Beschreibung des Produkts</div>
+            </div>
+            <div class="product-action">
+              <a class="btn-amazon" href="DEIN-AMAZON-LINK" target="_blank" rel="nofollow">Kaufen</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- BADEZIMMER -->
+  <div class="category" id="cat-bad">
+    <div class="cat-header" onclick="toggle('cat-bad')">
+      <div class="cat-icon">🛁</div>
+      <div class="cat-title"><h2>Badezimmer</h2><small>Pflege & Organisation</small></div>
+      <span class="cat-arrow">›</span>
+    </div>
+    <div class="cat-body">
+      <div class="products">
+
+        <div class="product">
+          <div class="product-inner">
+            <div class="product-img" data-img="URL-FOTO-PRODUKTI-KETU">
+              <span class="no-img">🛒</span>
+            </div>
+            <div class="product-info">
+              <div class="name">Produktname hier</div>
+              <div class="desc">Kurze Beschreibung des Produkts</div>
+            </div>
+            <div class="product-action">
+              <a class="btn-amazon" href="DEIN-AMAZON-LINK" target="_blank" rel="nofollow">Kaufen</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ZUHAUSE -->
+  <div class="category" id="cat-home">
+    <div class="cat-header" onclick="toggle('cat-home')">
+      <div class="cat-icon">🏠</div>
+      <div class="cat-title"><h2>Zuhause</h2><small>Wohnen & Einrichten</small></div>
+      <span class="cat-arrow">›</span>
+    </div>
+    <div class="cat-body">
+      <div class="products">
+
+        <div class="product">
+          <div class="product-inner">
+            <div class="product-img" data-img="URL-FOTO-PRODUKTI-KETU">
+              <span class="no-img">🛒</span>
+            </div>
+            <div class="product-info">
+              <div class="name">Produktname hier</div>
+              <div class="desc">Kurze Beschreibung des Produkts</div>
+            </div>
+            <div class="product-action">
+              <a class="btn-amazon" href="DEIN-AMAZON-LINK" target="_blank" rel="nofollow">Kaufen</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- GYM -->
+  <div class="category" id="cat-gym">
+    <div class="cat-header" onclick="toggle('cat-gym')">
+      <div class="cat-icon">💪</div>
+      <div class="cat-title"><h2>Gym & Sport</h2><small>Fitness & Training</small></div>
+      <span class="cat-arrow">›</span>
+    </div>
+    <div class="cat-body">
+      <div class="products">
+
+        <div class="product">
+          <div class="product-inner">
+            <div class="product-img" data-img="URL-FOTO-PRODUKTI-KETU">
+              <span class="no-img">🛒</span>
+            </div>
+            <div class="product-info">
+              <div class="name">Produktname hier</div>
+              <div class="desc">Kurze Beschreibung des Produkts</div>
+            </div>
+            <div class="product-action">
+              <a class="btn-amazon" href="DEIN-AMAZON-LINK" target="_blank" rel="nofollow">Kaufen</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>* Affiliate-Links. Als Amazon-Partner verdiene ich an qualifizierten Käufen.</p>
+</footer>
+
+<script>
+  function toggle(id) {
+    document.getElementById(id).classList.toggle('open');
+  }
+
+  // Ngarko fotot automatikisht nga data-img
+  document.querySelectorAll('.product-img[data-img]').forEach(function(el) {
+    var url = el.getAttribute('data-img');
+    if (url && url !== 'URL-FOTO-PRODUKTI-KETU' && url.trim() !== '') {
+      var img = document.createElement('img');
+      img.src = url;
+      img.alt = '';
+      img.onerror = function() { /* mban ikonën nëse foto nuk ngarkohet */ };
+      el.innerHTML = '';
+      el.appendChild(img);
+    }
+  });
+</script>
+</body>
+</html>
