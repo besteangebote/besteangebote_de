@@ -190,6 +190,10 @@
 
 <script>
 var ADMIN_PW = "bestea2024";
+  var GITHUB_TOKEN = "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";
+var GITHUB_REPO = "besteangebote_de";
+var GITHUB_USER = "besteangebote";
+var GITHUB_FILE = "products.json";
 var adminUnlocked = false;
 
 var EMOJIS = ['🍳','🛁','🏠','💪','👗','💄','🧴','🧹','🌿','📦','🛋️','🧸','🐾','📚','🎮','💡','🔧','🚴','🧘','☕','🍷','🎁','👶','🧺','🪴'];
@@ -318,6 +322,7 @@ function selectEmoji(el, e) {
 
 // ── ADD PRODUCT ──
 function addProduct() {
+function addProduct() {
   var cat  = document.getElementById('fKat').value;
   var name = document.getElementById('fName').value.trim();
   var desc = document.getElementById('fDesc').value.trim();
@@ -327,14 +332,8 @@ function addProduct() {
   var items = getItems(cat);
   items.push({name:name,desc:desc,img:img,link:link});
   saveItems(cat, items);
-  document.getElementById('fName').value='';
-  document.getElementById('fDesc').value='';
-  document.getElementById('fImg').value='';
-  document.getElementById('fLink').value='';
-  renderAll();
-  var catEl = document.getElementById(cat);
-  if(catEl && !catEl.classList.contains('open')) catEl.classList.add('open');
-  alert('✅ Produkt hinzugefügt!');
+  saveToGitHub();
+}
 }
 
 function deleteProduct(catId, i) {
