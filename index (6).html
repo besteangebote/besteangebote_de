@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Besteangebote.de – Top Deals & Angebote</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Roboto:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --primary: #e63012;
+      --primary-dark: #c0250d;
+      --accent: #ff6b35;
+      --dark: #1a1a2e;
+      --card-bg: #ffffff;
+      --bg: #f4f6fb;
+      --text: #222;
+      --muted: #777;
+      --border: #e0e0e0;
+      --nav-bg: #ffffff;
+      --shadow: 0 4px 24px rgba(0,0,0,0.09);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Roboto', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ---- HEADER ---- */
+    header {
+      background: var(--nav-bg);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .header-inner {
+      max-width: 1280px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 20px; gap: 16px;
+    }
+    .logo-wrap { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon {
+      width: 54px; height: 54px;
+      background: var(--dark);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; flex-shrink: 0;
+    }
+    .logo-icon svg { width: 34px; height: 34px; }
+    .logo-badge {
+      position: absolute; top: -5px; right: -5px;
+      background: var(--primary); color: #fff;
+      font-size: 9px; font-weight: 900; font-family: 'Nunito', sans-serif;
+      padding: 2px 5px; border-radius: 6px; border: 2px solid #fff;
+    }
+    .logo-text { line-height: 1.1; }
+    .logo-text span.name {
+      font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 22px;
+      color: var(--text); letter-spacing: -0.5px;
+    }
+    .logo-text span.name .accent { color: var(--primary); }
+    .logo-text span.tagline { font-size: 11px; color: var(--muted); display: block; letter-spacing: 0.5px; }
+    .search-bar {
+      flex: 1; max-width: 480px;
+      display: flex; align-items: center;
+      background: var(--bg); border: 2px solid var(--border);
+      border-radius: 50px; overflow: hidden;
+      transition: border 0.2s;
+    }
+    .search-bar:focus-within { border-color: var(--primary); }
+    .search-bar input {
+      border: none; background: transparent; padding: 10px 16px;
+      font-size: 14px; flex: 1; outline: none; color: var(--text);
+    }
+    .search-bar button {
+      background: var(--primary); border: none; color: #fff;
+      padding: 10px 18px; cursor: pointer; font-size: 16px;
+      transition: background 0.2s;
+    }
+    .search-bar button:hover { background: var(--primary-dark); }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    .btn-admin {
+      background: var(--dark); color: #fff;
+      border: none; border-radius: 8px;
+      padding: 9px 16px; font-size: 13px; font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .btn-admin:hover { background: #2d2d44; }
+
+    /* ---- HERO BANNER ---- */
+    .hero {
+      background: linear-gradient(135deg, var(--dark) 0%, #2c2c54 100%);
+      color: #fff; padding: 48px 20px;
+      text-align: center;
+    }
+    .hero h1 {
+      font-family: 'Nunito', sans-serif; font-size: clamp(28px, 5vw, 52px);
+      font-weight: 900; letter-spacing: -1px;
+      margin-bottom: 12px;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero p { font-size: 16px; opacity: 0.8; max-width: 500px; margin: 0 auto 24px; }
+    .hero-stats {
+      display: flex; justify-content: center; gap: 32px; flex-wrap: wrap;
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat .num { font-family: 'Nunito', sans-serif; font-size: 28px; font-weight: 900; color: var(--accent); }
+    .hero-stat .lab { font-size: 12px; opacity: 0.7; }
+
+    /* ---- MAIN LAYOUT ---- */
+    .main-wrap { max-width: 1280px; margin: 0 auto; padding: 32px 20px; }
+
+    /* ---- CATEGORY NAV ---- */
+    .cat-nav {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 28px;
+    }
+    .cat-btn {
+      background: #fff; border: 2px solid var(--border);
+      border-radius: 50px; padding: 8px 18px;
+      font-size: 13px; font-weight: 700; font-family: 'Nunito', sans-serif;
+      cursor: pointer; transition: all 0.2s; color: var(--text);
+    }
+    .cat-btn:hover, .cat-btn.active {
+      background: var(--primary); border-color: var(--primary); color: #fff;
+    }
+    .cat-btn.all-btn { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+    /* ---- SECTION TITLE ---- */
+    .section-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .section-head h2 {
+      font-family: 'Nunito', sans-serif; font-size: 22px; font-weight: 900;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-head h2::before {
+      content: ''; display: inline-block;
+      width: 5px; height: 22px;
+      background: var(--primary); border-radius: 3px;
+    }
+
+    /* ---- PRODUCT GRID ---- */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 20px;
+    }
+    .product-card {
+      background: var(--card-bg); border-radius: var(--radius);
+      box-shadow: var(--shadow); overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative; display: flex; flex-direction: column;
+    }
+    .product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.13); }
+    .product-img {
+      width: 100%; aspect-ratio: 1/1; object-fit: contain;
+      background: #f8f8f8; padding: 12px;
+    }
+    .product-img-placeholder {
+      width: 100%; aspect-ratio: 1/1;
+      background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 48px;
+    }
+    .discount-badge {
+      position: absolute; top: 12px; left: 12px;
+      background: var(--primary); color: #fff;
+      font-family: 'Nunito', sans-serif; font-weight: 900;
+      font-size: 13px; padding: 3px 10px; border-radius: 20px;
+    }
+    .product-info { padding: 14px; flex: 1; display: flex; flex-direction: column; }
+    .product-cat-tag {
+      font-size: 11px; font-weight: 700; color: var(--primary);
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;
+    }
+    .product-title {
+      font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800;
+      color: var(--text); margin-bottom: 8px; line-height: 1.3;
+    }
+    .product-price-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .product-price {
+      font-family: 'Nunito', sans-serif; font-size: 22px; font-weight: 900;
+      color: var(--primary);
+    }
+    .product-old-price {
+      font-size: 14px; color: var(--muted); text-decoration: line-through;
+    }
+    .btn-deal {
+      display: block; text-align: center;
+      background: var(--primary); color: #fff;
+      border-radius: 8px; padding: 11px;
+      font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 14px;
+      text-decoration: none; margin-top: auto;
+      transition: background 0.2s;
+    }
+    .btn-deal:hover { background: var(--primary-dark); }
+
+    /* ---- EMPTY STATE ---- */
+    .empty-state {
+      text-align: center; padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty-state .icon { font-size: 56px; margin-bottom: 16px; }
+    .empty-state p { font-size: 16px; }
+
+    /* ---- FOOTER ---- */
+    footer {
+      background: var(--dark); color: rgba(255,255,255,0.7);
+      text-align: center; padding: 24px 20px;
+      font-size: 13px; margin-top: 60px;
+    }
+    footer strong { color: #fff; }
+
+    /* ========== ADMIN PANEL ========== */
+    #admin-overlay {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+    }
+    #admin-overlay.show { display: flex; }
+
+    /* Login Modal */
+    #login-modal {
+      background: #fff; border-radius: 20px;
+      padding: 40px; width: 100%; max-width: 380px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    #login-modal .lock-icon { font-size: 48px; margin-bottom: 12px; }
+    #login-modal h2 {
+      font-family: 'Nunito', sans-serif; font-size: 24px; font-weight: 900;
+      margin-bottom: 6px;
+    }
+    #login-modal p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+    #login-modal input {
+      width: 100%; padding: 13px 16px; border: 2px solid var(--border);
+      border-radius: 10px; font-size: 15px; outline: none;
+      margin-bottom: 12px; transition: border 0.2s;
+    }
+    #login-modal input:focus { border-color: var(--primary); }
+    #login-modal .btn-login {
+      width: 100%; background: var(--primary); color: #fff;
+      border: none; border-radius: 10px; padding: 13px;
+      font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 900;
+      cursor: pointer; transition: background 0.2s;
+    }
+    #login-modal .btn-login:hover { background: var(--primary-dark); }
+    #login-modal .error-msg {
+      color: var(--primary); font-size: 13px; margin-top: 8px; display: none;
+    }
+    #login-modal .btn-cancel {
+      background: none; border: none; color: var(--muted);
+      font-size: 13px; margin-top: 12px; cursor: pointer;
+      display: block; width: 100%;
+    }
+
+    /* Admin Dashboard */
+    #admin-panel {
+      background: #fff; border-radius: 20px;
+      width: 95vw; max-width: 960px; max-height: 90vh;
+      overflow: hidden; display: flex; flex-direction: column;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+    }
+    .admin-header {
+      background: var(--dark); color: #fff;
+      padding: 18px 28px; display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .admin-header h2 {
+      font-family: 'Nunito', sans-serif; font-size: 20px; font-weight: 900;
+    }
+    .admin-header .admin-tabs { display: flex; gap: 6px; }
+    .admin-tab {
+      background: rgba(255,255,255,0.12); border: none; color: rgba(255,255,255,0.7);
+      border-radius: 8px; padding: 7px 16px; font-size: 13px; font-weight: 700;
+      font-family: 'Nunito', sans-serif; cursor: pointer; transition: all 0.2s;
+    }
+    .admin-tab.active, .admin-tab:hover { background: var(--primary); color: #fff; }
+    .btn-close-admin {
+      background: rgba(255,255,255,0.12); border: none; color: #fff;
+      border-radius: 8px; width: 36px; height: 36px; font-size: 18px;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .btn-close-admin:hover { background: var(--primary); }
+    .admin-body { overflow-y: auto; padding: 24px 28px; flex: 1; }
+
+    /* Admin Tab Panes */
+    .admin-pane { display: none; }
+    .admin-pane.active { display: block; }
+
+    /* Form Groups */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media(max-width:600px){ .form-grid { grid-template-columns: 1fr; } }
+    .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+    .form-group label {
+      font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 11px 14px; border: 2px solid var(--border);
+      border-radius: 10px; font-size: 14px; outline: none;
+      transition: border 0.2s; font-family: 'Roboto', sans-serif;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--primary);
+    }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+    .btn-primary {
+      background: var(--primary); color: #fff; border: none;
+      border-radius: 10px; padding: 12px 24px;
+      font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 900;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-danger {
+      background: #fff; color: var(--primary); border: 2px solid var(--primary);
+      border-radius: 8px; padding: 6px 12px;
+      font-size: 12px; font-weight: 700; font-family: 'Nunito', sans-serif;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-danger:hover { background: var(--primary); color: #fff; }
+
+    /* Admin lists */
+    .admin-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .admin-list-item {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--bg); border-radius: 10px; padding: 12px 16px;
+      font-size: 14px;
+    }
+    .admin-list-item .item-name { font-weight: 700; }
+    .admin-list-item .item-meta { font-size: 12px; color: var(--muted); }
+    .success-msg {
+      background: #e6f9ed; border: 1.5px solid #4caf50;
+      color: #256029; border-radius: 10px; padding: 10px 16px;
+      font-size: 13px; font-weight: 600; margin-bottom: 16px; display: none;
+    }
+    .section-divider {
+      border: none; border-top: 2px solid var(--border); margin: 20px 0;
+    }
+
+    /* ---- RESPONSIVE ---- */
+    @media(max-width:768px){
+      .header-inner { flex-wrap: wrap; }
+      .search-bar { order: 3; width: 100%; max-width: 100%; flex: 0 0 100%; }
+      .hero { padding: 32px 16px; }
+    }
+    @media(max-width:480px){
+      .logo-text span.name { font-size: 18px; }
+      .admin-body { padding: 16px; }
+      .admin-header { padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
+    }
+
+    /* Loading spinner */
+    .spinner {
+      display: inline-block; width: 18px; height: 18px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.7s linear infinite; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header>
+  <div class="header-inner">
+    <a class="logo-wrap" href="#">
+      <div class="logo-icon">
+        <!-- Shopping cart SVG icon -->
+        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 8h4l4 16h14l3-10H13" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="17" cy="30" r="2.5" fill="#e63012"/>
+          <circle cx="27" cy="30" r="2.5" fill="#e63012"/>
+          <circle cx="10" cy="6" r="3" fill="#e63012"/>
+          <text x="7" y="9" font-size="4" fill="#fff" font-weight="bold">SALE</text>
+        </svg>
+        <span class="logo-badge">SALE</span>
+      </div>
+      <div class="logo-text">
+        <span class="name">besteangebote<span class="accent">.de</span></span>
+        <span class="tagline">— Top Deals &amp; Angebote —</span>
+      </div>
+    </a>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Produkte suchen..." />
+      <button onclick="searchProducts()">🔍</button>
+    </div>
+    <div class="header-actions">
+      <button class="btn-admin" onclick="openAdmin()">🔐 Admin</button>
+    </div>
+  </div>
+</header>
+
+<!-- ===== HERO ===== -->
+<div class="hero">
+  <h1>Die besten <span>Amazon Deals</span><br>auf einen Blick 🛒</h1>
+  <p>Täglich aktualisierte Angebote – spare bis zu 70% bei Top-Produkten!</p>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="num" id="stat-products">0</div>
+      <div class="lab">Produkte</div>
+    </div>
+    <div class="hero-stat">
+      <div class="num" id="stat-cats">0</div>
+      <div class="lab">Kategorien</div>
+    </div>
+    <div class="hero-stat">
+      <div class="num">100%</div>
+      <div class="lab">Amazon Deals</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN ===== -->
+<div class="main-wrap">
+  <!-- Category Filter -->
+  <div class="cat-nav" id="catNav">
+    <button class="cat-btn all-btn active" onclick="filterCategory('all')">Alle Deals</button>
+  </div>
+
+  <!-- Products Section -->
+  <div class="section-head">
+    <h2>Aktuelle Angebote</h2>
+  </div>
+  <div class="product-grid" id="productGrid">
+    <div class="empty-state" style="grid-column:1/-1">
+      <div class="icon">🛍️</div>
+      <p>Lade Produkte...</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <p>© 2024 <strong>Besteangebote.de</strong> – Alle Preise sind Amazon-Preise. Wir verdienen an qualifizierten Käufen als Amazon-Partner.</p>
+</footer>
+
+<!-- ========== ADMIN OVERLAY ========== -->
+<div id="admin-overlay">
+
+  <!-- Login Modal -->
+  <div id="login-modal">
+    <div class="lock-icon">🔒</div>
+    <h2>Admin Login</h2>
+    <p>Besteangebote.de Admin Panel</p>
+    <input type="password" id="adminPasswordInput" placeholder="Passwort eingeben..." onkeydown="if(event.key==='Enter')checkLogin()"/>
+    <button class="btn-login" onclick="checkLogin()">Einloggen</button>
+    <div class="error-msg" id="loginError">❌ Falsches Passwort!</div>
+    <button class="btn-cancel" onclick="closeAdmin()">Abbrechen</button>
+  </div>
+
+  <!-- Admin Dashboard -->
+  <div id="admin-panel" style="display:none">
+    <div class="admin-header">
+      <h2>⚙️ Admin Panel</h2>
+      <div class="admin-tabs">
+        <button class="admin-tab active" onclick="switchTab('products')">📦 Produkte</button>
+        <button class="admin-tab" onclick="switchTab('categories')">📂 Kategorien</button>
+      </div>
+      <button class="btn-close-admin" onclick="closeAdmin()">✕</button>
+    </div>
+    <div class="admin-body">
+
+      <!-- Products Pane -->
+      <div class="admin-pane active" id="pane-products">
+        <div class="success-msg" id="prod-success">✅ Produkt erfolgreich gespeichert!</div>
+        <h3 style="font-family:'Nunito',sans-serif;font-size:17px;font-weight:900;margin-bottom:16px;">Neues Produkt hinzufügen</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Produktname *</label>
+            <input type="text" id="p-name" placeholder="z.B. Sony Kopfhörer WH-1000XM5"/>
+          </div>
+          <div class="form-group">
+            <label>Kategorie *</label>
+            <select id="p-cat"></select>
+          </div>
+          <div class="form-group">
+            <label>Preis (€) *</label>
+            <input type="number" id="p-price" placeholder="49.99" step="0.01"/>
+          </div>
+          <div class="form-group">
+            <label>Alter Preis (€)</label>
+            <input type="number" id="p-oldprice" placeholder="79.99" step="0.01"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Amazon Affiliate Link *</label>
+          <input type="url" id="p-link" placeholder="https://www.amazon.de/dp/... (mit deinem Affiliate-Tag)"/>
+        </div>
+        <div class="form-group">
+          <label>Bild URL (optional)</label>
+          <input type="url" id="p-img" placeholder="https://images-na.ssl-images-amazon.com/..."/>
+        </div>
+        <div class="form-group">
+          <label>Beschreibung (optional)</label>
+          <textarea id="p-desc" placeholder="Kurze Produktbeschreibung..."></textarea>
+        </div>
+        <button class="btn-primary" onclick="addProduct()">➕ Produkt hinzufügen</button>
+
+        <hr class="section-divider"/>
+        <h3 style="font-family:'Nunito',sans-serif;font-size:17px;font-weight:900;margin-bottom:16px;">Vorhandene Produkte</h3>
+        <ul class="admin-list" id="admin-product-list">
+          <li style="color:var(--muted);font-size:14px;">Keine Produkte vorhanden.</li>
+        </ul>
+      </div>
+
+      <!-- Categories Pane -->
+      <div class="admin-pane" id="pane-categories">
+        <div class="success-msg" id="cat-success">✅ Kategorie erfolgreich gespeichert!</div>
+        <h3 style="font-family:'Nunito',sans-serif;font-size:17px;font-weight:900;margin-bottom:16px;">Neue Kategorie hinzufügen</h3>
+        <div class="form-group">
+          <label>Kategoriename *</label>
+          <input type="text" id="c-name" placeholder="z.B. Elektronik, Sport, Küche..."/>
+        </div>
+        <div class="form-group">
+          <label>Emoji Icon</label>
+          <input type="text" id="c-icon" placeholder="z.B. 📱 💪 🍳" maxlength="2"/>
+        </div>
+        <button class="btn-primary" onclick="addCategory()">➕ Kategorie hinzufügen</button>
+
+        <hr class="section-divider"/>
+        <h3 style="font-family:'Nunito',sans-serif;font-size:17px;font-weight:900;margin-bottom:16px;">Vorhandene Kategorien</h3>
+        <ul class="admin-list" id="admin-cat-list">
+          <li style="color:var(--muted);font-size:14px;">Keine Kategorien vorhanden.</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===== FIREBASE + APP SCRIPT ===== -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getDatabase, ref, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA4WrrmYvZqite0fKb_U02ok8g-aDMMbh4",
+    authDomain: "besteangebote-5ac91.firebaseapp.com",
+    databaseURL: "https://besteangebote-5ac91-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "besteangebote-5ac91",
+    storageBucket: "besteangebote-5ac91.firebasestorage.app",
+    messagingSenderId: "430767330617",
+    appId: "1:430767330617:web:67335acba08209848704e8",
+    measurementId: "G-FC8BGPS72D"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // ---- STATE ----
+  let allCategories = {};
+  let allProducts = {};
+  let activeCategory = 'all';
+  let searchQuery = '';
+
+  // ---- LOAD CATEGORIES ----
+  const catsRef = ref(db, 'categories');
+  onValue(catsRef, (snap) => {
+    allCategories = snap.val() || {};
+    renderCategoryNav();
+    renderAdminCatList();
+    populateCatSelect();
+  });
+
+  // ---- LOAD PRODUCTS ----
+  const prodsRef = ref(db, 'products');
+  onValue(prodsRef, (snap) => {
+    allProducts = snap.val() || {};
+    renderProducts();
+    renderAdminProductList();
+    updateStats();
+  });
+
+  // ---- RENDER CATEGORY NAV ----
+  function renderCategoryNav() {
+    const nav = document.getElementById('catNav');
+    nav.innerHTML = `<button class="cat-btn all-btn ${activeCategory==='all'?'active':''}" onclick="filterCategory('all')">🏷️ Alle Deals</button>`;
+    Object.entries(allCategories).forEach(([id, cat]) => {
+      nav.innerHTML += `<button class="cat-btn ${activeCategory===id?'active':''}" onclick="filterCategory('${id}')">${cat.icon||''} ${cat.name}</button>`;
+    });
+  }
+
+  // ---- RENDER PRODUCTS ----
+  function renderProducts() {
+    const grid = document.getElementById('productGrid');
+    let filtered = Object.entries(allProducts);
+    if (activeCategory !== 'all') {
+      filtered = filtered.filter(([,p]) => p.categoryId === activeCategory);
+    }
+    if (searchQuery) {
+      filtered = filtered.filter(([,p]) => p.name.toLowerCase().includes(searchQuery));
+    }
+    if (filtered.length === 0) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="icon">🛍️</div><p>Keine Produkte gefunden.</p></div>`;
+      return;
+    }
+    grid.innerHTML = filtered.map(([id, p]) => {
+      const discount = p.oldPrice && p.price ? Math.round((1 - p.price/p.oldPrice)*100) : 0;
+      const catName = allCategories[p.categoryId]?.name || '';
+      return `
+        <div class="product-card">
+          ${discount>0?`<div class="discount-badge">-${discount}%</div>`:''}
+          ${p.imageUrl
+            ? `<img class="product-img" src="${p.imageUrl}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+               <div class="product-img-placeholder" style="display:none">🛒</div>`
+            : `<div class="product-img-placeholder">🛒</div>`}
+          <div class="product-info">
+            ${catName?`<div class="product-cat-tag">${catName}</div>`:''}
+            <div class="product-title">${p.name}</div>
+            <div class="product-price-row">
+              <span class="product-price">€${parseFloat(p.price).toFixed(2)}</span>
+              ${p.oldPrice?`<span class="product-old-price">€${parseFloat(p.oldPrice).toFixed(2)}</span>`:''}
+            </div>
+            <a href="${p.affiliateLink}" target="_blank" rel="noopener sponsored" class="btn-deal">🛒 Zum Deal auf Amazon</a>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ---- STATS ----
+  function updateStats() {
+    document.getElementById('stat-products').textContent = Object.keys(allProducts).length;
+    document.getElementById('stat-cats').textContent = Object.keys(allCategories).length;
+  }
+
+  // ---- ADMIN: cat select ----
+  function populateCatSelect() {
+    const sel = document.getElementById('p-cat');
+    sel.innerHTML = '<option value="">Kategorie wählen...</option>';
+    Object.entries(allCategories).forEach(([id, cat]) => {
+      sel.innerHTML += `<option value="${id}">${cat.icon||''} ${cat.name}</option>`;
+    });
+  }
+
+  // ---- ADMIN: cat list ----
+  function renderAdminCatList() {
+    const ul = document.getElementById('admin-cat-list');
+    const entries = Object.entries(allCategories);
+    if (!entries.length) { ul.innerHTML = `<li style="color:var(--muted);font-size:14px;">Keine Kategorien vorhanden.</li>`; return; }
+    ul.innerHTML = entries.map(([id, cat]) => `
+      <li class="admin-list-item">
+        <div>
+          <div class="item-name">${cat.icon||''} ${cat.name}</div>
+        </div>
+        <button class="btn-danger" onclick="deleteCategory('${id}')">🗑️ Löschen</button>
+      </li>`).join('');
+  }
+
+  // ---- ADMIN: product list ----
+  function renderAdminProductList() {
+    const ul = document.getElementById('admin-product-list');
+    const entries = Object.entries(allProducts);
+    if (!entries.length) { ul.innerHTML = `<li style="color:var(--muted);font-size:14px;">Keine Produkte vorhanden.</li>`; return; }
+    ul.innerHTML = entries.map(([id, p]) => {
+      const catName = allCategories[p.categoryId]?.name || 'Unbekannt';
+      return `<li class="admin-list-item">
+        <div>
+          <div class="item-name">${p.name}</div>
+          <div class="item-meta">€${parseFloat(p.price).toFixed(2)} • ${catName}</div>
+        </div>
+        <button class="btn-danger" onclick="deleteProduct('${id}')">🗑️ Löschen</button>
+      </li>`;
+    }).join('');
+  }
+
+  // ---- GLOBAL FUNCTIONS (called from HTML onclick) ----
+  window.filterCategory = function(id) {
+    activeCategory = id;
+    renderCategoryNav();
+    renderProducts();
+  };
+
+  window.searchProducts = function() {
+    searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+    renderProducts();
+  };
+
+  document.getElementById('searchInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.searchProducts();
+  });
+
+  window.openAdmin = function() {
+    document.getElementById('admin-overlay').classList.add('show');
+    document.getElementById('login-modal').style.display = 'block';
+    document.getElementById('admin-panel').style.display = 'none';
+    document.getElementById('adminPasswordInput').value = '';
+    document.getElementById('loginError').style.display = 'none';
+  };
+
+  window.closeAdmin = function() {
+    document.getElementById('admin-overlay').classList.remove('show');
+  };
+
+  window.checkLogin = function() {
+    const pw = document.getElementById('adminPasswordInput').value;
+    if (pw === 'bestea2024') {
+      document.getElementById('login-modal').style.display = 'none';
+      document.getElementById('admin-panel').style.display = 'flex';
+      document.getElementById('admin-panel').style.flexDirection = 'column';
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+      document.getElementById('adminPasswordInput').value = '';
+    }
+  };
+
+  window.switchTab = function(tab) {
+    document.querySelectorAll('.admin-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(`pane-${tab}`).classList.add('active');
+    event.target.classList.add('active');
+  };
+
+  window.addCategory = async function() {
+    const name = document.getElementById('c-name').value.trim();
+    const icon = document.getElementById('c-icon').value.trim();
+    if (!name) { alert('Bitte einen Kategorienamen eingeben!'); return; }
+    const newRef = push(ref(db, 'categories'));
+    await set(newRef, { name, icon });
+    document.getElementById('c-name').value = '';
+    document.getElementById('c-icon').value = '';
+    const msg = document.getElementById('cat-success');
+    msg.style.display = 'block';
+    setTimeout(() => msg.style.display = 'none', 3000);
+  };
+
+  window.deleteCategory = async function(id) {
+    if (!confirm('Kategorie wirklich löschen?')) return;
+    await remove(ref(db, `categories/${id}`));
+  };
+
+  window.addProduct = async function() {
+    const name = document.getElementById('p-name').value.trim();
+    const catId = document.getElementById('p-cat').value;
+    const price = parseFloat(document.getElementById('p-price').value);
+    const oldPrice = parseFloat(document.getElementById('p-oldprice').value) || null;
+    const link = document.getElementById('p-link').value.trim();
+    const img = document.getElementById('p-img').value.trim();
+    const desc = document.getElementById('p-desc').value.trim();
+    if (!name || !catId || !price || !link) { alert('Bitte Produktname, Kategorie, Preis und Affiliate-Link ausfüllen!'); return; }
+    const newRef = push(ref(db, 'products'));
+    await set(newRef, { name, categoryId: catId, price, oldPrice, affiliateLink: link, imageUrl: img, description: desc, createdAt: Date.now() });
+    ['p-name','p-price','p-oldprice','p-link','p-img','p-desc'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('p-cat').value = '';
+    const msg = document.getElementById('prod-success');
+    msg.style.display = 'block';
+    setTimeout(() => msg.style.display = 'none', 3000);
+  };
+
+  window.deleteProduct = async function(id) {
+    if (!confirm('Produkt wirklich löschen?')) return;
+    await remove(ref(db, `products/${id}`));
+  };
+
+  // Close overlay on background click
+  document.getElementById('admin-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeAdmin();
+  });
+</script>
+</body>
+</html>
