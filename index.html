@@ -211,8 +211,7 @@ nav {
 }
 
 .cat-count {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  display: none;
 }
 
 .cat-arrow {
@@ -656,6 +655,71 @@ textarea { resize: vertical; min-height: 70px; }
   box-shadow: 0 0 0 2px rgba(200,245,90,0.15);
 }
 
+/* ─── ANALYTICS ─── */
+.analytics-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.analytics-rank {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.analytics-rank.top { color: var(--accent); }
+
+.analytics-info { flex: 1; min-width: 0; }
+.analytics-name { font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.analytics-cat { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+.analytics-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 7px;
+}
+.analytics-bar-bg {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.analytics-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+.analytics-clicks {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+  min-width: 36px;
+  text-align: right;
+}
+.analytics-clicks span {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.analytics-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
 /* ─── RESPONSIVE ─── */
 @media (max-width: 600px) {
   .categories-grid { grid-template-columns: 1fr; }
@@ -707,6 +771,7 @@ textarea { resize: vertical; min-height: 70px; }
     <div class="admin-tabs">
       <button class="tab-btn active" data-tab="cats">Categories</button>
       <button class="tab-btn" data-tab="products">Products</button>
+      <button class="tab-btn" data-tab="analytics">📊</button>
     </div>
 
     <!-- CATEGORIES TAB -->
@@ -754,6 +819,16 @@ textarea { resize: vertical; min-height: 70px; }
         <div class="loading"><div class="spinner"></div></div>
       </div>
     </div>
+    <!-- ANALYTICS TAB -->
+    <div class="tab-content" id="tab-analytics">
+      <p class="section-label">Click Tracking</p>
+      <div id="analyticsList" class="item-list">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+      <hr class="divider">
+      <button class="btn btn-danger" id="resetClicksBtn" style="margin-top:4px;">Reset All Clicks</button>
+    </div>
+
   </div>
 </div>
 
@@ -830,6 +905,7 @@ const ADMIN_PASSWORD = "bestea2024";
 let isLoggedIn = false;
 let allCategories = {};
 let allProducts = {};
+let allClicks = {};
 let currentCatId = null;
 
 // ── UTILS ──
@@ -886,6 +962,7 @@ function openAdmin() {
   renderAdminCats();
   renderAdminProds();
   populateCatSelects();
+  renderAnalytics();
 }
 
 function closeAdmin() {
@@ -911,6 +988,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 document.addEventListener('firebaseReady', () => {
   listenCategories();
   listenProducts();
+  listenClicks();
 });
 
 // ── LISTEN CATEGORIES ──
@@ -935,7 +1013,14 @@ function listenProducts() {
   });
 }
 
-// ── HOME CATEGORIES ──
+// ── LISTEN CLICKS ──
+function listenClicks() {
+  const r = window._ref(window._db, 'clicks');
+  window._onValue(r, snap => {
+    allClicks = snap.val() || {};
+    renderAnalytics();
+  });
+}
 function renderHomeCategories() {
   const grid = document.getElementById('categoriesGrid');
   const cats = Object.entries(allCategories);
@@ -993,7 +1078,7 @@ function renderProductsPage(catId) {
       <div class="product-img-placeholder" style="${p.imageUrl ? 'display:none' : ''}">📦</div>
       <div class="product-body">
         <div class="product-name">${p.name}</div>
-        <a class="product-link" href="${p.affiliateUrl}" target="_blank" rel="noopener">
+        <a class="product-link" href="${p.affiliateUrl}" target="_blank" rel="noopener" onclick="trackClick('${id}')">
           View Deal ↗
         </a>
       </div>
@@ -1202,12 +1287,68 @@ document.getElementById('saveEditProd').addEventListener('click', async () => {
   showToast('Product updated ✓');
 });
 
+// ── TRACK CLICK ──
+async function trackClick(productId) {
+  const current = (allClicks[productId] || 0) + 1;
+  await window._update(window._ref(window._db, 'clicks'), { [productId]: current });
+}
+
+// ── RENDER ANALYTICS ──
+function renderAnalytics() {
+  const list = document.getElementById('analyticsList');
+  if (!list) return;
+
+  const prods = Object.entries(allProducts);
+  if (prods.length === 0) {
+    list.innerHTML = `<div class="analytics-empty">No products yet</div>`;
+    return;
+  }
+
+  // merge clicks into products and sort desc
+  const ranked = prods
+    .map(([id, p]) => ({ id, ...p, clicks: allClicks[id] || 0 }))
+    .sort((a, b) => b.clicks - a.clicks);
+
+  const maxClicks = ranked[0].clicks || 1;
+
+  if (ranked.every(p => p.clicks === 0)) {
+    list.innerHTML = `<div class="analytics-empty">🖱 No clicks tracked yet.<br>Clicks will appear here when visitors click products.</div>`;
+    return;
+  }
+
+  list.innerHTML = ranked.map((p, i) => {
+    const cat = allCategories[p.categoryId];
+    const pct = Math.round((p.clicks / maxClicks) * 100);
+    return `<div class="analytics-item">
+      <div class="analytics-rank ${i === 0 ? 'top' : ''}">#${i + 1}</div>
+      <div class="analytics-info">
+        <div class="analytics-name">${p.name}</div>
+        <div class="analytics-cat">${cat ? (cat.emoji + ' ' + cat.name) : '—'}</div>
+        <div class="analytics-bar-wrap">
+          <div class="analytics-bar-bg">
+            <div class="analytics-bar-fill" style="width:${pct}%"></div>
+          </div>
+          <div class="analytics-clicks">${p.clicks} <span>clicks</span></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── RESET CLICKS ──
+document.getElementById('resetClicksBtn').addEventListener('click', async () => {
+  if (!confirm('Reset ALL click counts to zero?')) return;
+  await window._set(window._ref(window._db, 'clicks'), null);
+  showToast('Click data reset ✓');
+});
+
 // expose for inline onclick
 window.goToCategory = goToCategory;
 window.deleteCat = deleteCat;
 window.deleteProd = deleteProd;
 window.openEditCat = openEditCat;
 window.openEditProd = openEditProd;
+window.trackClick = trackClick;
 </script>
 </body>
 </html>
