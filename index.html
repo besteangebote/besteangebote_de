@@ -1,1367 +1,862 @@
-<!DOCTYPE html>
-<html lang="sq">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Beste Angebote</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-<!-- Firebase -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-  import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyA4WrrmYvZqite0fKb_U02ok8g-aDMMbh4",
-    authDomain: "besteangebote-5ac91.firebaseapp.com",
-    databaseURL: "https://besteangebote-5ac91-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "besteangebote-5ac91",
-    storageBucket: "besteangebote-5ac91.firebasestorage.app",
-    messagingSenderId: "430767330617",
-    appId: "1:430767330617:web:67335acba08209848704e8",
-    measurementId: "G-FC8BGPS72D"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  const storage = getStorage(app);
-
-  window._db = db;
-  window._ref = ref;
-  window._set = set;
-  window._push = push;
-  window._onValue = onValue;
-  window._remove = remove;
-  window._update = update;
-  window._storageRef = storageRef;
-  window._uploadBytes = uploadBytes;
-  window._getDownloadURL = getDownloadURL;
-  window._storage = storage;
-  window.firebaseReady = true;
-  document.dispatchEvent(new Event('firebaseReady'));
-</script>
-
-<style>
-:root {
-  --bg: #0a0a0f;
-  --surface: #13131a;
-  --surface2: #1c1c27;
-  --border: rgba(255,255,255,0.07);
-  --accent: #c8f55a;
-  --accent2: #7c6eff;
-  --text: #f0f0f5;
-  --text-muted: #7a7a99;
-  --radius: 16px;
-  --radius-sm: 10px;
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-/* ─── BG AMBIENT ─── */
-body::before {
-  content: '';
-  position: fixed;
-  top: -30%;
-  left: -10%;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(124,110,255,0.12) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
-body::after {
-  content: '';
-  position: fixed;
-  bottom: -20%;
-  right: -10%;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(200,245,90,0.07) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* ─── NAV ─── */
-nav {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  padding: 18px 32px;
-  background: rgba(10,10,15,0.7);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
-}
-
-#adminNavBtn {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13px;
-  transition: all 0.2s;
-  letter-spacing: 0.5px;
-}
-#adminNavBtn:hover { border-color: var(--accent); color: var(--accent); }
-
-/* ─── PAGES ─── */
-.page { display: none; position: relative; z-index: 1; }
-.page.active { display: block; }
-
-/* ─── HOME ─── */
-#homePage {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 60px 24px;
-}
-
-.hero {
-  text-align: center;
-  margin-bottom: 64px;
-  animation: fadeUp 0.6s ease both;
-}
-
-.hero h1 {
-  font-family: 'DM Serif Display', serif;
-  font-size: clamp(2.8rem, 6vw, 5rem);
-  line-height: 1.1;
-  letter-spacing: -1px;
-  background: linear-gradient(135deg, #f0f0f5 40%, #7c6eff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 16px;
-}
-
-.hero p {
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  font-weight: 300;
-}
-
-/* ─── CATEGORIES ─── */
-.section-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 24px;
-}
-
-.categories-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-bottom: 48px;
-}
-
-.cat-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 16px 18px;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  position: relative;
-  overflow: hidden;
-  animation: fadeUp 0.5s ease both;
-}
-
-.cat-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--accent2), var(--accent));
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.3s ease;
-}
-.cat-card:hover::before { transform: scaleX(1); }
-.cat-card:hover {
-  border-color: rgba(255,255,255,0.15);
-  transform: translateY(-3px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-}
-
-.cat-icon {
-  font-size: 2rem;
-  margin-bottom: 14px;
-}
-
-.cat-name {
-  font-size: 1.15rem;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.cat-count {
-  display: none;
-}
-
-.cat-arrow {
-  position: absolute;
-  top: 24px; right: 24px;
-  color: var(--text-muted);
-  font-size: 1.2rem;
-  transition: transform 0.2s, color 0.2s;
-}
-.cat-card:hover .cat-arrow { transform: translate(3px,-3px); color: var(--accent); }
-
-/* ─── PRODUCTS PAGE ─── */
-#productsPage {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 40px 24px;
-}
-
-.back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  padding: 10px 18px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  margin-bottom: 36px;
-  transition: all 0.2s;
-}
-.back-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-.products-header {
-  margin-bottom: 36px;
-}
-
-.products-header h2 {
-  font-family: 'DM Serif Display', serif;
-  font-size: 2.2rem;
-  margin-bottom: 6px;
-}
-
-.products-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.product-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  transition: all 0.2s ease;
-  animation: fadeUp 0.35s ease both;
-  display: flex;
-  align-items: center;
-  gap: 0;
-}
-.product-card:hover {
-  border-color: rgba(200,245,90,0.2);
-  background: var(--surface2);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-}
-
-.product-img {
-  width: 90px;
-  height: 90px;
-  object-fit: cover;
-  flex-shrink: 0;
-  display: block;
-  background: var(--surface2);
-}
-
-.product-img-placeholder {
-  width: 90px;
-  height: 90px;
-  background: var(--surface2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  font-size: 1.8rem;
-  flex-shrink: 0;
-}
-
-.product-body {
-  padding: 14px 18px;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 0;
-}
-
-.product-name {
-  font-weight: 500;
-  font-size: 0.95rem;
-  line-height: 1.4;
-  flex: 1;
-  min-width: 0;
-}
-
-.product-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--accent);
-  color: #0a0a0f;
-  font-weight: 700;
-  font-size: 0.78rem;
-  padding: 9px 16px;
-  border-radius: 8px;
-  text-decoration: none;
-  transition: all 0.2s;
-  white-space: nowrap;
-  flex-shrink: 0;
-  letter-spacing: 0.3px;
-}
-.product-link:hover { background: #d4ff6a; transform: scale(1.04); }
-
-/* ─── EMPTY ─── */
-.empty-state {
-  text-align: center;
-  padding: 80px 20px;
-  color: var(--text-muted);
-}
-.empty-state .empty-icon { font-size: 3rem; margin-bottom: 16px; }
-.empty-state h3 { font-size: 1.2rem; margin-bottom: 8px; color: var(--text); }
-
-/* ─── ADMIN PAGE ─── */
-#adminPage {
-  display: none;
-  position: fixed;
-  top: 0; right: 0;
-  width: min(460px, 100vw);
-  height: 100vh;
-  background: var(--surface);
-  border-left: 1px solid var(--border);
-  z-index: 1000;
-  overflow-y: auto;
-  transform: translateX(100%);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: -20px 0 60px rgba(0,0,0,0.5);
-}
-#adminPage.open {
-  display: block;
-  transform: translateX(0);
-}
-
-.admin-header {
-  padding: 24px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  background: var(--surface);
-  z-index: 10;
-}
-
-.admin-header h2 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: -0.3px;
-}
-
-#closeAdmin {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: 1.4rem;
-  line-height: 1;
-  padding: 4px;
-  transition: color 0.2s;
-}
-#closeAdmin:hover { color: var(--text); }
-
-.admin-body { padding: 24px; }
-
-.admin-tabs {
-  display: flex;
-  gap: 4px;
-  background: var(--surface2);
-  border-radius: 10px;
-  padding: 4px;
-  margin-bottom: 28px;
-}
-
-.tab-btn {
-  flex: 1;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  padding: 9px 8px;
-  border-radius: 7px;
-  cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-.tab-btn.active {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-
-/* ─── FORM ─── */
-.form-group { margin-bottom: 18px; }
-
-label {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-}
-
-input[type="text"], input[type="url"], input[type="password"], select, textarea {
-  width: 100%;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-input:focus, select:focus, textarea:focus { border-color: var(--accent2); }
-select option { background: var(--surface2); }
-textarea { resize: vertical; min-height: 70px; }
-
-.btn {
-  width: 100%;
-  padding: 13px;
-  border-radius: var(--radius-sm);
-  border: none;
-  cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 600;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background: var(--accent);
-  color: #0a0a0f;
-}
-.btn-primary:hover { background: #d4ff6a; transform: scale(1.01); }
-
-.btn-secondary {
-  background: var(--surface2);
-  color: var(--text);
-  border: 1px solid var(--border);
-}
-.btn-secondary:hover { border-color: rgba(255,255,255,0.2); }
-
-.btn-danger {
-  background: rgba(255,60,60,0.15);
-  color: #ff6060;
-  border: 1px solid rgba(255,60,60,0.2);
-}
-.btn-danger:hover { background: rgba(255,60,60,0.25); }
-
-.divider {
-  border: none;
-  border-top: 1px solid var(--border);
-  margin: 24px 0;
-}
-
-/* ─── ITEM LIST ─── */
-.item-list { display: flex; flex-direction: column; gap: 10px; }
-
-.list-item {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.list-item-info { flex: 1; min-width: 0; }
-.list-item-name { font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.list-item-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-
-.list-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
-
-.icon-btn {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  width: 32px;
-  height: 32px;
-  border-radius: 7px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-.icon-btn:hover { background: var(--surface); color: var(--text); }
-.icon-btn.del:hover { border-color: rgba(255,60,60,0.4); color: #ff6060; background: rgba(255,60,60,0.1); }
-.icon-btn.edt:hover { border-color: rgba(200,245,90,0.4); color: var(--accent); }
-
-/* ─── LOGIN ─── */
-#loginOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(10px);
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  display: none;
-}
-#loginOverlay.show { display: flex; }
-
-.login-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 36px 32px;
-  width: min(380px, 90vw);
-  animation: fadeUp 0.3s ease;
-}
-
-.login-box h3 {
-  font-family: 'DM Serif Display', serif;
-  font-size: 1.6rem;
-  margin-bottom: 6px;
-}
-.login-box p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px; }
-
-#loginError {
-  background: rgba(255,60,60,0.12);
-  border: 1px solid rgba(255,60,60,0.2);
-  color: #ff8080;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-  margin-bottom: 16px;
-  display: none;
-}
-
-/* ─── MODAL ─── */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.75);
-  backdrop-filter: blur(8px);
-  z-index: 3000;
-  display: none;
-  align-items: center;
-  justify-content: center;
-}
-.modal-overlay.show { display: flex; }
-
-.modal-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 28px;
-  width: min(420px, 90vw);
-  animation: fadeUp 0.3s ease;
-}
-.modal-box h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 20px; }
-
-.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-.modal-actions .btn { flex: 1; }
-
-/* ─── TOAST ─── */
-#toast {
-  position: fixed;
-  bottom: 32px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 13px 24px;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 500;
-  z-index: 9999;
-  opacity: 0;
-  transition: all 0.3s ease;
-  pointer-events: none;
-  white-space: nowrap;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-}
-#toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-#toast.success { border-color: rgba(200,245,90,0.3); }
-#toast.error { border-color: rgba(255,60,60,0.3); color: #ff8080; }
-
-/* ─── OVERLAY BACKDROP ─── */
-#backdrop {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 999;
-}
-#backdrop.show { display: block; }
-
-/* ─── LOADING ─── */
-.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 60px;
-}
-.spinner {
-  width: 36px; height: 36px;
-  border: 2px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-
-/* ─── ANIMATIONS ─── */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* ─── EDIT HIGHLIGHT ─── */
-.editing {
-  border-color: var(--accent) !important;
-  box-shadow: 0 0 0 2px rgba(200,245,90,0.15);
-}
-
-/* ─── ANALYTICS ─── */
-.analytics-item {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.analytics-rank {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  width: 20px;
-  text-align: center;
-  flex-shrink: 0;
-}
-.analytics-rank.top { color: var(--accent); }
-
-.analytics-info { flex: 1; min-width: 0; }
-.analytics-name { font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.analytics-cat { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-
-.analytics-bar-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 7px;
-}
-.analytics-bar-bg {
-  flex: 1;
-  height: 4px;
-  background: var(--border);
-  border-radius: 2px;
-  overflow: hidden;
-}
-.analytics-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent2), var(--accent));
-  border-radius: 2px;
-  transition: width 0.5s ease;
-}
-.analytics-clicks {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--accent);
-  flex-shrink: 0;
-  min-width: 36px;
-  text-align: right;
-}
-.analytics-clicks span {
-  font-size: 10px;
-  font-weight: 400;
-  color: var(--text-muted);
-}
-
-.analytics-empty {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--text-muted);
-  font-size: 13px;
-}
-
-/* ─── RESPONSIVE ─── */
-@media (max-width: 600px) {
-  .categories-grid { grid-template-columns: 1fr; }
-  .product-img, .product-img-placeholder { width: 72px; height: 72px; }
-  .product-body { padding: 10px 12px; gap: 10px; }
-  .product-link { padding: 8px 12px; font-size: 0.75rem; }
-}
-</style>
-</head>
-<body>
-
-<!-- NAV -->
-<nav>
-  <button id="adminNavBtn">⚙ Admin</button>
-</nav>
-
-<!-- HOME PAGE -->
-<div id="homePage" class="page active">
-  <div class="hero">
-    <h1>Discover & Shop</h1>
-    <p>Curated deals across every category</p>
-  </div>
-  <p class="section-label">Browse Categories</p>
-  <div id="categoriesGrid" class="categories-grid">
-    <div class="loading"><div class="spinner"></div></div>
-  </div>
-</div>
-
-<!-- PRODUCTS PAGE -->
-<div id="productsPage" class="page">
-  <button class="back-btn" id="backBtn">← Back</button>
-  <div class="products-header">
-    <h2 id="catPageTitle">Category</h2>
-    <p class="section-label" id="catPageCount"></p>
-  </div>
-  <div id="productsGrid" class="products-grid">
-    <div class="loading"><div class="spinner"></div></div>
-  </div>
-</div>
-
-<!-- BACKDROP -->
-<div id="backdrop"></div>
-
-<!-- ADMIN PANEL -->
-<div id="adminPage">
-  <div class="admin-header">
-    <h2>Admin Panel</h2>
-    <button id="closeAdmin">✕</button>
-  </div>
-  <div class="admin-body">
-    <div class="admin-tabs">
-      <button class="tab-btn active" data-tab="cats">Categories</button>
-      <button class="tab-btn" data-tab="products">Products</button>
-      <button class="tab-btn" data-tab="analytics">📊</button>
-    </div>
-
-    <!-- CATEGORIES TAB -->
-    <div class="tab-content active" id="tab-cats">
-      <div class="form-group">
-        <label>Category Name</label>
-        <input type="text" id="catName" placeholder="e.g. Electronics">
-      </div>
-      <div class="form-group">
-        <label>Emoji Icon</label>
-        <input type="text" id="catEmoji" placeholder="e.g. 📱" maxlength="4">
-      </div>
-      <button class="btn btn-primary" id="saveCatBtn">Add Category</button>
-      <hr class="divider">
-      <p class="section-label">Existing Categories</p>
-      <div id="catList" class="item-list">
-        <div class="loading"><div class="spinner"></div></div>
-      </div>
-    </div>
-
-    <!-- PRODUCTS TAB -->
-    <div class="tab-content" id="tab-products">
-      <div class="form-group">
-        <label>Product Name</label>
-        <input type="text" id="prodName" placeholder="Product name">
-      </div>
-      <div class="form-group">
-        <label>Image URL</label>
-        <input type="url" id="prodImgUrl" placeholder="https://...">
-      </div>
-      <div class="form-group">
-        <label>Affiliate Link</label>
-        <input type="url" id="prodLink" placeholder="https://...">
-      </div>
-      <div class="form-group">
-        <label>Category</label>
-        <select id="prodCat">
-          <option value="">— Select category —</option>
-        </select>
-      </div>
-      <button class="btn btn-primary" id="saveProdBtn">Add Product</button>
-      <hr class="divider">
-      <p class="section-label">Existing Products</p>
-      <div id="prodList" class="item-list">
-        <div class="loading"><div class="spinner"></div></div>
-      </div>
-    </div>
-    <!-- ANALYTICS TAB -->
-    <div class="tab-content" id="tab-analytics">
-      <p class="section-label">Click Tracking</p>
-      <div id="analyticsList" class="item-list">
-        <div class="loading"><div class="spinner"></div></div>
-      </div>
-      <hr class="divider">
-      <button class="btn btn-danger" id="resetClicksBtn" style="margin-top:4px;">Reset All Clicks</button>
-    </div>
-
-  </div>
-</div>
-
-<!-- LOGIN OVERLAY -->
-<div id="loginOverlay">
-  <div class="login-box">
-    <h3>Admin Access</h3>
-    <p>Enter password to continue</p>
-    <div id="loginError">Incorrect password. Try again.</div>
-    <div class="form-group">
-      <label>Password</label>
-      <input type="password" id="passwordInput" placeholder="••••••••">
-    </div>
-    <button class="btn btn-primary" id="loginBtn">Enter Panel</button>
-    <button class="btn btn-secondary" style="margin-top:10px;" id="cancelLoginBtn">Cancel</button>
-  </div>
-</div>
-
-<!-- EDIT CATEGORY MODAL -->
-<div class="modal-overlay" id="editCatModal">
-  <div class="modal-box">
-    <h3>Edit Category</h3>
-    <input type="hidden" id="editCatId">
-    <div class="form-group">
-      <label>Category Name</label>
-      <input type="text" id="editCatName">
-    </div>
-    <div class="form-group">
-      <label>Emoji Icon</label>
-      <input type="text" id="editCatEmoji" maxlength="4">
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" id="cancelEditCat">Cancel</button>
-      <button class="btn btn-primary" id="saveEditCat">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- EDIT PRODUCT MODAL -->
-<div class="modal-overlay" id="editProdModal">
-  <div class="modal-box">
-    <h3>Edit Product</h3>
-    <input type="hidden" id="editProdId">
-    <div class="form-group">
-      <label>Product Name</label>
-      <input type="text" id="editProdName">
-    </div>
-    <div class="form-group">
-      <label>Image URL</label>
-      <input type="url" id="editProdImgUrl">
-    </div>
-    <div class="form-group">
-      <label>Affiliate Link</label>
-      <input type="url" id="editProdLink">
-    </div>
-    <div class="form-group">
-      <label>Category</label>
-      <select id="editProdCat"></select>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" id="cancelEditProd">Cancel</button>
-      <button class="btn btn-primary" id="saveEditProd">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- TOAST -->
-<div id="toast"></div>
-
-<script>
-const ADMIN_PASSWORD = "bestea2024";
-
-// ── STATE ──
-let isLoggedIn = false;
-let allCategories = {};
-let allProducts = {};
-let allClicks = {};
-let currentCatId = null;
-
-// ── UTILS ──
-function showToast(msg, type = 'success') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'show ' + type;
-  setTimeout(() => t.className = '', 2800);
-}
-
-function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-// ── NAV ──
-document.getElementById('adminNavBtn').addEventListener('click', () => {
-  if (!isLoggedIn) {
-    document.getElementById('loginOverlay').classList.add('show');
-    document.getElementById('passwordInput').value = '';
-    document.getElementById('loginError').style.display = 'none';
-    setTimeout(() => document.getElementById('passwordInput').focus(), 100);
-  } else {
-    openAdmin();
-  }
-});
-
-// ── LOGIN ──
-function doLogin() {
-  const pw = document.getElementById('passwordInput').value;
-  if (pw === ADMIN_PASSWORD) {
-    isLoggedIn = true;
-    document.getElementById('loginOverlay').classList.remove('show');
-    document.getElementById('loginError').style.display = 'none';
-    openAdmin();
-  } else {
-    document.getElementById('loginError').style.display = 'block';
-    document.getElementById('passwordInput').value = '';
-    document.getElementById('passwordInput').focus();
-  }
-}
-
-document.getElementById('loginBtn').addEventListener('click', doLogin);
-document.getElementById('passwordInput').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-document.getElementById('cancelLoginBtn').addEventListener('click', () => {
-  document.getElementById('loginOverlay').classList.remove('show');
-});
-
-// ── ADMIN OPEN/CLOSE ──
-function openAdmin() {
-  document.getElementById('adminPage').style.display = 'block';
-  setTimeout(() => document.getElementById('adminPage').classList.add('open'), 10);
-  document.getElementById('backdrop').classList.add('show');
-  renderAdminCats();
-  renderAdminProds();
-  populateCatSelects();
-  renderAnalytics();
-}
-
-function closeAdmin() {
-  document.getElementById('adminPage').classList.remove('open');
-  document.getElementById('backdrop').classList.remove('show');
-  setTimeout(() => document.getElementById('adminPage').style.display = 'none', 400);
-}
-
-document.getElementById('closeAdmin').addEventListener('click', closeAdmin);
-document.getElementById('backdrop').addEventListener('click', closeAdmin);
-
-// ── TABS ──
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-  });
-});
-
-// ── FIREBASE READY ──
-document.addEventListener('firebaseReady', () => {
-  listenCategories();
-  listenProducts();
-  listenClicks();
-});
-
-// ── LISTEN CATEGORIES ──
-function listenCategories() {
-  const r = window._ref(window._db, 'categories');
-  window._onValue(r, snap => {
-    allCategories = snap.val() || {};
-    renderHomeCategories();
-    renderAdminCats();
-    populateCatSelects();
-    if (currentCatId) renderProductsPage(currentCatId);
+const {
+  Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+  AlignmentType, HeadingLevel, BorderStyle, WidthType, ShadingType,
+  LevelFormat, PageBreak, UnderlineType
+} = require('docx');
+const fs = require('fs');
+
+const BLUE = "1F4E79";
+const LIGHT_BLUE = "D6E4F0";
+const MID_BLUE = "2E75B6";
+const GREY = "F2F2F2";
+const DARK = "1A1A1A";
+const ANSWER_LINE = "_______________________________________________";
+
+function heading1(text) {
+  return new Paragraph({
+    heading: HeadingLevel.HEADING_1,
+    spacing: { before: 400, after: 200 },
+    border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: MID_BLUE, space: 4 } },
+    children: [new TextRun({ text, bold: true, size: 32, color: BLUE, font: "Arial" })]
   });
 }
 
-// ── LISTEN PRODUCTS ──
-function listenProducts() {
-  const r = window._ref(window._db, 'products');
-  window._onValue(r, snap => {
-    allProducts = snap.val() || {};
-    renderAdminProds();
-    if (currentCatId) renderProductsPage(currentCatId);
+function heading2(text) {
+  return new Paragraph({
+    heading: HeadingLevel.HEADING_2,
+    spacing: { before: 300, after: 120 },
+    children: [new TextRun({ text, bold: true, size: 26, color: MID_BLUE, font: "Arial" })]
   });
 }
 
-// ── LISTEN CLICKS ──
-function listenClicks() {
-  const r = window._ref(window._db, 'clicks');
-  window._onValue(r, snap => {
-    allClicks = snap.val() || {};
-    renderAnalytics();
+function heading3(text) {
+  return new Paragraph({
+    spacing: { before: 200, after: 100 },
+    children: [new TextRun({ text, bold: true, size: 24, color: DARK, font: "Arial", underline: { type: UnderlineType.SINGLE } })]
   });
 }
-function renderHomeCategories() {
-  const grid = document.getElementById('categoriesGrid');
-  const cats = Object.entries(allCategories);
 
-  // sort by timestamp DESC (latest first)
-  cats.sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
-
-  if (cats.length === 0) {
-    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">📂</div><h3>No categories yet</h3><p>Add some from the admin panel</p></div>`;
-    return;
-  }
-
-  grid.innerHTML = cats.map(([id, cat], i) => {
-    const count = Object.values(allProducts).filter(p => p.categoryId === id).length;
-    return `<div class="cat-card" style="animation-delay:${i * 0.06}s" onclick="goToCategory('${id}')">
-      <div class="cat-icon">${cat.emoji || '📦'}</div>
-      <div class="cat-name">${cat.name}</div>
-      <div class="cat-count">${count} product${count !== 1 ? 's' : ''}</div>
-      <div class="cat-arrow">→</div>
-    </div>`;
-  }).join('');
+function normal(text, opts = {}) {
+  return new Paragraph({
+    spacing: { before: 60, after: 60 },
+    children: [new TextRun({ text, size: 22, font: "Arial", ...opts })]
+  });
 }
 
-// ── GO TO CATEGORY ──
-function goToCategory(catId) {
-  currentCatId = catId;
-  renderProductsPage(catId);
-  showPage('productsPage');
+function bold(text) {
+  return normal(text, { bold: true });
 }
 
-function renderProductsPage(catId) {
-  const cat = allCategories[catId];
-  if (!cat) return;
-
-  document.getElementById('catPageTitle').textContent = (cat.emoji || '') + ' ' + cat.name;
-
-  const prods = Object.entries(allProducts).filter(([, p]) => p.categoryId === catId);
-  // sort by timestamp DESC
-  prods.sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
-
-  const count = prods.length;
-  document.getElementById('catPageCount').textContent = `${count} product${count !== 1 ? 's' : ''}`;
-
-  const grid = document.getElementById('productsGrid');
-  if (count === 0) {
-    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🛒</div><h3>No products yet</h3><p>Add products to this category</p></div>`;
-    return;
-  }
-
-  grid.innerHTML = prods.map(([id, p], i) => `
-    <div class="product-card" style="animation-delay:${i * 0.05}s">
-      ${p.imageUrl
-        ? `<img class="product-img" src="${p.imageUrl}" alt="${p.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-        : ''}
-      <div class="product-img-placeholder" style="${p.imageUrl ? 'display:none' : ''}">📦</div>
-      <div class="product-body">
-        <div class="product-name">${p.name}</div>
-        <a class="product-link" href="${p.affiliateUrl}" target="_blank" rel="noopener" onclick="trackClick('${id}')">
-          View Deal ↗
-        </a>
-      </div>
-    </div>
-  `).join('');
+function italic(text) {
+  return normal(text, { italics: true, color: "555555" });
 }
 
-document.getElementById('backBtn').addEventListener('click', () => {
-  currentCatId = null;
-  showPage('homePage');
+function tip(text) {
+  return new Paragraph({
+    spacing: { before: 100, after: 100 },
+    indent: { left: 360 },
+    children: [
+      new TextRun({ text: "💡 Tipp: ", bold: true, size: 22, font: "Arial", color: "7B6B00" }),
+      new TextRun({ text, size: 22, font: "Arial", color: "4A4000" })
+    ]
+  });
+}
+
+function answerLine(label = "") {
+  return new Paragraph({
+    spacing: { before: 80, after: 80 },
+    children: [
+      new TextRun({ text: label ? label + "  " : "", bold: true, size: 22, font: "Arial" }),
+      new TextRun({ text: ANSWER_LINE, size: 22, font: "Arial", color: "AAAAAA" })
+    ]
+  });
+}
+
+function emptyLine() {
+  return new Paragraph({ spacing: { before: 60, after: 60 }, children: [new TextRun("")] });
+}
+
+function pageBreak() {
+  return new Paragraph({ children: [new PageBreak()] });
+}
+
+function boxParagraph(text, opts = {}) {
+  return new Paragraph({
+    spacing: { before: 80, after: 80 },
+    indent: { left: 240, right: 240 },
+    border: {
+      top: { style: BorderStyle.SINGLE, size: 4, color: "AAAAAA" },
+      bottom: { style: BorderStyle.SINGLE, size: 4, color: "AAAAAA" },
+      left: { style: BorderStyle.THICK, size: 12, color: MID_BLUE },
+      right: { style: BorderStyle.SINGLE, size: 4, color: "AAAAAA" },
+    },
+    children: [new TextRun({ text, size: 22, font: "Arial", ...opts })]
+  });
+}
+
+function infoTable(rows) {
+  const border = { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" };
+  const borders = { top: border, bottom: border, left: border, right: border };
+  return new Table({
+    width: { size: 9360, type: WidthType.DXA },
+    columnWidths: [2500, 6860],
+    rows: rows.map(([left, right], i) =>
+      new TableRow({
+        children: [
+          new TableCell({
+            borders,
+            width: { size: 2500, type: WidthType.DXA },
+            shading: { fill: i === 0 ? BLUE : LIGHT_BLUE, type: ShadingType.CLEAR },
+            margins: { top: 80, bottom: 80, left: 120, right: 120 },
+            children: [new Paragraph({ children: [new TextRun({ text: left, bold: true, size: 20, font: "Arial", color: i === 0 ? "FFFFFF" : DARK })] })]
+          }),
+          new TableCell({
+            borders,
+            width: { size: 6860, type: WidthType.DXA },
+            shading: { fill: i === 0 ? "2E75B6" : "FFFFFF", type: ShadingType.CLEAR },
+            margins: { top: 80, bottom: 80, left: 120, right: 120 },
+            children: [new Paragraph({ children: [new TextRun({ text: right, size: 20, font: "Arial", color: i === 0 ? "FFFFFF" : DARK })] })]
+          })
+        ]
+      })
+    )
+  });
+}
+
+function numberedEx(num, text, sub = "") {
+  return new Paragraph({
+    spacing: { before: 80, after: 40 },
+    children: [
+      new TextRun({ text: `${num}. `, bold: true, size: 22, font: "Arial", color: MID_BLUE }),
+      new TextRun({ text, size: 22, font: "Arial" }),
+      ...(sub ? [new TextRun({ text: `  ${sub}`, size: 22, font: "Arial", italics: true, color: "777777" })] : [])
+    ]
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// CONTENT
+// ─────────────────────────────────────────────────────────────
+
+const children = [];
+
+// COVER
+children.push(
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 1200, after: 200 },
+    children: [new TextRun({ text: "GOETHE-ZERTIFIKAT B1", bold: true, size: 52, font: "Arial", color: BLUE })]
+  }),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 0, after: 200 },
+    children: [new TextRun({ text: "Libër Pune — Arbeitsbuch", size: 36, font: "Arial", color: MID_BLUE, italics: true })]
+  }),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 0, after: 100 },
+    children: [new TextRun({ text: "Ushtrime sipas formatit zyrtar të testit", size: 26, font: "Arial", color: "555555" })]
+  }),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 0, after: 600 },
+    children: [new TextRun({ text: "Termin: 18.06.2025", size: 24, font: "Arial", color: "888888", bold: true })]
+  }),
+  emptyLine(),
+  emptyLine(),
+
+  // STRUKTURA E TESTIT
+  heading1("📋 Struktura e Testit Goethe B1"),
+  normal("Testi Goethe B1 ndahet në katër pjesë kryesore:"),
+  emptyLine(),
+  infoTable([
+    ["Pjesa", "Kohëzgjatja / Pikët"],
+    ["📖 Lesen (Lexim)", "65 minuta — 45 pikë"],
+    ["👂 Hören (Dëgjim)", "40 minuta — 30 pikë"],
+    ["✍️ Schreiben (Shkrim)", "60 minuta — 30 pikë"],
+    ["🗣️ Sprechen (Të folurit)", "15 minuta — 30 pikë"],
+    ["TOTAL", "≈ 180 minuta — 135 pikë (60% = kalon = 81 pikë)"],
+  ]),
+  emptyLine(),
+  tip("Çdo pjesë ka pikë minimum. Duhet të kalosh çdo pjesë veçmas!"),
+  pageBreak(),
+
+  // ══════════════════════════════════════════════
+  // TEIL 1 — LESEN
+  // ══════════════════════════════════════════════
+  heading1("📖 TEIL 1: LESEN — Leximi (65 min | 45 pikë)"),
+  normal("Testi Lesen ka 5 ushtrime (Aufgaben). Çdo ushtrim ka 5 pyetje (5 pikë)."),
+  emptyLine(),
+
+  heading2("▶ Aufgabe 1 — Mehrfachauswahl (Zgjedhja e shumëfishtë)"),
+  boxParagraph("Lexo një tekst të gjatë (rreth 500 fjalë) dhe zgjedh përgjigjen e saktë (a, b ose c) për 5 pyetje."),
+  emptyLine(),
+  italic("📰 Tekst Ushtrimi — Lese den Text und wähle die richtige Antwort."),
+  emptyLine(),
+  normal("Klima und Umwelt"),
+  normal("Immer mehr Menschen interessieren sich für Umweltschutz. In Deutschland gibt es viele Initiativen, die dabei helfen, die Umwelt zu schonen. Eine davon ist die sogenannte „Zero-Waste-Bewegung", bei der versucht wird, so wenig Müll wie möglich zu produzieren. Viele Städte haben bereits begonnen, Recyclingprogramme einzuführen, und es gibt immer mehr Geschäfte, die Produkte ohne Verpackung anbieten. Experten sagen, dass jeder Einzelne einen wichtigen Beitrag zum Umweltschutz leisten kann, wenn er zum Beispiel weniger Auto fährt, mehr öffentliche Verkehrsmittel nutzt oder auf Kurzstreckenflüge verzichtet. Auch das Kaufen von regionalen und saisonalen Produkten schont die Umwelt erheblich, da lange Transportwege vermieden werden. Viele Familien haben außerdem begonnen, in ihrer Freizeit Müll in der Natur zu sammeln – sogenanntes „Plogging", eine Kombination aus Jogging und Müll aufsammeln."),
+  emptyLine(),
+  numberedEx(1, "Worum geht es in diesem Text hauptsächlich?"),
+  normal("     a) Um eine neue Sportart namens Plogging"),
+  normal("     b) Um verschiedene Möglichkeiten, die Umwelt zu schützen"),
+  normal("     c) Um Recyclingprogramme in deutschen Städten"),
+  emptyLine(),
+  numberedEx(2, "Was empfehlen Experten?"),
+  normal("     a) Mehr mit dem Auto zu fahren"),
+  normal("     b) Häufiger zu fliegen"),
+  normal("     c) Öffentliche Verkehrsmittel zu benutzen"),
+  emptyLine(),
+  numberedEx(3, "Was ist „Zero Waste"?"),
+  normal("     a) Ein neues Recyclingprogramm der Regierung"),
+  normal("     b) Eine Bewegung, die wenig Müll produzieren will"),
+  normal("     c) Ein Geschäft ohne Verpackungen"),
+  emptyLine(),
+  numberedEx(4, "Was bedeutet „Plogging"?"),
+  normal("     a) Eine neue Art von Jogging ohne Schuhe"),
+  normal("     b) Jogging kombiniert mit Müll aufsammeln"),
+  normal("     c) Online einkaufen und Pakete zurückschicken"),
+  emptyLine(),
+  numberedEx(5, "Welche Vorteile haben regionale Produkte?"),
+  normal("     a) Sie sind billiger als importierte Produkte"),
+  normal("     b) Sie brauchen kürzere Transportwege"),
+  normal("     c) Sie haben bessere Verpackungen"),
+  emptyLine(),
+  italic("✅ Lösungen: 1-b, 2-c, 3-b, 4-b, 5-b"),
+  emptyLine(),
+
+  heading2("▶ Aufgabe 2 — Informationen zuordnen (Informacione faqesh/burimesh)"),
+  boxParagraph("Lexo 5 reklama ose njoftime të shkurtra dhe përshtatja e saktë: cilat persona / situata u korrespondojnë?"),
+  emptyLine(),
+  bold("Personen:"),
+  normal("A — Tomás sucht ein günstiges Zimmer in der Nähe der Universität."),
+  normal("B — Maria möchte Gitarrenunterricht für ihren 8-jährigen Sohn."),
+  normal("C — Familie Huber sucht eine 4-Zimmer-Wohnung mit Garten."),
+  normal("D — Klaus braucht jemanden, der sein Auto repariert."),
+  normal("E — Anna möchte Deutsch lernen, hat aber wenig Zeit."),
+  emptyLine(),
+  bold("Anzeigen:"),
+  normal("1 — Biete Wohngemeinschaft in Uninähe, 350 €/Monat, ruhige Lage, WG mit 3 Studenten."),
+  normal("2 — Musikschule König: Gitarre, Klavier, Flöte — ab 6 Jahren. Probestunde kostenlos!"),
+  normal("3 — Haus mit 120m², 4 Zimmer, großer Garten, 1.800 €/Monat. Haustiere erlaubt."),
+  normal("4 — KFZ-Werkstatt Müller: Reparaturen aller Art, faire Preise, Mo–Sa geöffnet."),
+  normal("5 — Deutschkurse online: flexibel, abends, auch am Wochenende. Niveau A1–C1."),
+  emptyLine(),
+  italic("✅ Lösungen: A→1, B→2, C→3, D→4, E→5"),
+  emptyLine(),
+
+  heading2("▶ Aufgabe 3 — Richtig oder Falsch (Saktë apo gabim)"),
+  boxParagraph("Lexo 5 pohime dhe vendos: richtig (R) ose falsch (F) bazuar në tekst."),
+  emptyLine(),
+  italic("Tekst shkurtër — Lese den Text:"),
+  normal("In Deutschland ist es Pflicht, Kinder ab 6 Jahren in die Schule zu schicken. Die Schulpflicht dauert in den meisten Bundesländern 9 Jahre. Es gibt verschiedene Schularten: Grundschule (4 Jahre), dann Hauptschule, Realschule oder Gymnasium. Das Abitur, der höchste Schulabschluss, ermöglicht das Studium an einer Universität. Viele Schüler machen nach der Schule eine Berufsausbildung, die in Deutschland sehr angesehen ist."),
+  emptyLine(),
+  numberedEx(1, "In Deutschland müssen Kinder ab 6 Jahren in die Schule gehen."),
+  normal("     ○ Richtig     ○ Falsch"),
+  emptyLine(),
+  numberedEx(2, "Die Schulpflicht dauert überall 12 Jahre."),
+  normal("     ○ Richtig     ○ Falsch"),
+  emptyLine(),
+  numberedEx(3, "Das Abitur ist der höchste Schulabschluss in Deutschland."),
+  normal("     ○ Richtig     ○ Falsch"),
+  emptyLine(),
+  numberedEx(4, "Nach dem Gymnasium kann man direkt studieren."),
+  normal("     ○ Richtig     ○ Falsch"),
+  emptyLine(),
+  numberedEx(5, "Eine Berufsausbildung wird in Deutschland nicht geschätzt."),
+  normal("     ○ Richtig     ○ Falsch"),
+  emptyLine(),
+  italic("✅ Lösungen: 1-R, 2-F, 3-R, 4-R, 5-F"),
+  emptyLine(),
+
+  heading2("▶ Aufgabe 4 — Zeitungsartikel (Artikull gazete)"),
+  boxParagraph("Lexo një artikull gazete dhe zgjidh përgjigjet e sakta (a, b, c) për 5 pyetje."),
+  emptyLine(),
+  normal("Arbeiten im Homeoffice — Vor- und Nachteile"),
+  normal("Seit der Corona-Pandemie hat sich die Arbeitswelt stark verändert. Immer mehr Unternehmen erlauben ihren Mitarbeitern, von zu Hause aus zu arbeiten. Eine aktuelle Studie zeigt, dass 65% der Arbeitnehmer in Deutschland zumindest teilweise im Homeoffice arbeiten. Die Vorteile liegen auf der Hand: weniger Pendelzeit, mehr Flexibilität und ein besseres Gleichgewicht zwischen Arbeit und Privatleben. Allerdings berichten viele Arbeitnehmer auch von Nachteilen: Sie fühlen sich isoliert, die Grenzen zwischen Arbeit und Freizeit verschwimmen, und technische Probleme können die Produktivität beeinflussen."),
+  emptyLine(),
+  numberedEx(1, "Wie viele Arbeitnehmer arbeiten laut Studie im Homeoffice?"),
+  normal("     a) Alle Arbeitnehmer     b) 65%     c) Weniger als die Hälfte"),
+  emptyLine(),
+  numberedEx(2, "Was ist ein Vorteil des Homeoffice?"),
+  normal("     a) Mehr soziale Kontakte     b) Weniger Pendelzeit     c) Bessere Technik"),
+  emptyLine(),
+  numberedEx(3, "Was ist ein Nachteil des Homeoffice?"),
+  normal("     a) Mehr Flexibilität     b) Isolation     c) Mehr Urlaubstage"),
+  emptyLine(),
+  italic("✅ Lösungen: 1-b, 2-b, 3-b"),
+  emptyLine(),
+
+  heading2("▶ Aufgabe 5 — Glossar / Lückentext aus Anzeigen"),
+  boxParagraph("Plotëso hapësirat bosh me fjalët e duhura nga lista e dhënë."),
+  emptyLine(),
+  normal("Fjalët: Urlaub | Koffer | Flugticket | Reisebüro | Hotel | Passport"),
+  emptyLine(),
+  normal("Ich plane meinen ______________ in Italien. Zuerst gehe ich zum ______________ und kaufe ein ______________ nach Rom. Dann buche ich ein ______________ in der Stadtmitte. Vor der Reise packe ich meinen ______________ und überprüfe meinen ______________."),
+  emptyLine(),
+  italic("✅ Lösung: Urlaub — Reisebüro — Flugticket — Hotel — Koffer — Passport"),
+  emptyLine(),
+  tip("Gjatë Lesen-it, lexo fillimisht pyetjet, pastaj tekstin. Kjo kursen kohë!"),
+  pageBreak(),
+
+  // ══════════════════════════════════════════════
+  // TEIL 2 — HÖREN
+  // ══════════════════════════════════════════════
+  heading1("👂 TEIL 2: HÖREN — Dëgjimi (40 min | 30 pikë)"),
+  normal("Testi Hören ka 4 ushtrime. Çdo audio dëgjohet dy herë."),
+  emptyLine(),
+
+  heading2("▶ Aufgabe 1 — Kurze Gespräche (Biseda të shkurtra)"),
+  boxParagraph("Dëgjo 5 biseda të shkurtra (radio, telefon, dyqan) dhe zgjedh a, b ose c."),
+  emptyLine(),
+  italic("Simulim ushtrimi — Lexo situatën dhe zgjedh:"),
+  emptyLine(),
+  numberedEx(1, "Du hörst ein Gespräch im Supermarkt. Was kauft die Frau?"),
+  normal("     a) Brot und Milch     b) Käse und Wurst     c) Äpfel und Bananen"),
+  emptyLine(),
+  numberedEx(2, "Du hörst eine Ansage am Bahnhof. Was hat sich geändert?"),
+  normal("     a) Der Zug kommt früher an     b) Der Zug hat Verspätung     c) Der Zug fährt nicht"),
+  emptyLine(),
+  numberedEx(3, "Ein Mann ruft bei einem Arzt an. Wann bekommt er einen Termin?"),
+  normal("     a) Montag um 9 Uhr     b) Dienstag um 14 Uhr     c) Mittwoch um 10 Uhr"),
+  emptyLine(),
+  tip("Shkruaj fjalë kyçe ndërkohë që dëgjon. Mos humb kohë duke menduar shumë."),
+  emptyLine(),
+
+  heading2("▶ Aufgabe 2 — Radiobeitrag (Reportazh radio)"),
+  boxParagraph("Dëgjo një reportazh radio (≈ 3 min) dhe plotëso hapësirat me fjalë të shkurtra."),
+  emptyLine(),
+  italic("Shembull ushtrimi (lexo, dëgjo, plotëso):"),
+  emptyLine(),
+  normal("Das Thema der Sendung ist: _______________________________"),
+  normal("Der Reporter spricht mit einer Person aus: ___________________"),
+  normal("Der Gast arbeitet seit __________ Jahren in diesem Beruf."),
+  normal("Ein Problem in seinem Beruf ist: ____________________________"),
+  normal("Am Ende gibt er folgenden Rat: ______________________________"),
+  emptyLine(),
+
+  heading2("▶ Aufgabe 3 — Diskussion / Interview"),
+  boxParagraph("Dëgjo një diskutim ose intervistë dhe vendos: richtig (R) ose falsch (F)."),
+  emptyLine(),
+  numberedEx(1, "Die Person im Interview ist zufrieden mit ihrer Arbeit.", "○ R  ○ F"),
+  numberedEx(2, "Sie verdient mehr als vorher.", "○ R  ○ F"),
+  numberedEx(3, "Sie möchte in einem anderen Land arbeiten.", "○ R  ○ F"),
+  numberedEx(4, "Ihre Kollegen sind freundlich.", "○ R  ○ F"),
+  numberedEx(5, "Sie empfiehlt diesen Beruf anderen.", "○ R  ○ F"),
+  emptyLine(),
+
+  heading2("▶ Aufgabe 4 — Ansagen / Durchsagen (Njoftime)"),
+  boxParagraph("Dëgjo 5 njoftime (stacion, spital, shkollë) dhe zgjedh informacionin e saktë."),
+  emptyLine(),
+  numberedEx(1, "Eine Ansage im Kaufhaus. Was ist reduziert?"),
+  normal("     a) Elektronik     b) Kleidung     c) Lebensmittel"),
+  emptyLine(),
+  numberedEx(2, "Eine Durchsage im Schwimmbad. Was ist heute geschlossen?"),
+  normal("     a) Das Hallenbad     b) Das Freibad     c) Die Sauna"),
+  emptyLine(),
+  tip("Gjatë Hören: lexo pyetjet 30 sekonda para se të fillojë audio. Kjo të ndihmon të fokusohesh!"),
+  pageBreak(),
+
+  // ══════════════════════════════════════════════
+  // TEIL 3 — SCHREIBEN
+  // ══════════════════════════════════════════════
+  heading1("✍️ TEIL 3: SCHREIBEN — Shkrimi (60 min | 30 pikë)"),
+  normal("Testi Schreiben ka 3 ushtrime: E-Mail, Mitteilung dhe ese/mendim personal."),
+  emptyLine(),
+
+  heading2("▶ Aufgabe 1 — E-Mail formell schreiben (≈ 100 fjalë)"),
+  boxParagraph("Shkruaj një e-mail zyrtare (formale). Duhet të adresosh 4 pika të dhëna."),
+  emptyLine(),
+  italic("Situata: Du hast im Internet eine Stellenanzeige gesehen. Schreib eine formelle E-Mail an das Unternehmen."),
+  emptyLine(),
+  bold("Schreib über folgende Punkte:"),
+  normal("• Warum du dich bewirbst"),
+  normal("• Deine Qualifikationen / Erfahrung"),
+  normal("• Wann du anfangen kannst"),
+  normal("• Bitte um ein Vorstellungsgespräch"),
+  emptyLine(),
+  bold("Struktura e E-Mail formale:"),
+  normal("Sehr geehrte Damen und Herren,  /  Sehr geehrter Herr [Name],  /  Sehr geehrte Frau [Name],"),
+  emptyLine(),
+  normal("Einleitung: _____________________________________________________________"),
+  answerLine(),
+  answerLine(),
+  normal("Hauptteil (4 pikët): ___________________________________________________"),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  normal("Schluss: ______________________________________________________________"),
+  answerLine(),
+  answerLine(),
+  normal("Mit freundlichen Grüßen,  [Unterschrift]"),
+  emptyLine(),
+  tip("ALDIK = Anrede, Lob (optional), Datum, Inhalt, Kontakt/Schluss — formula që funksionon!"),
+  emptyLine(),
+
+  heading2("▶ Aufgabe 2 — Formelle Mitteilung / Beschwerde"),
+  boxParagraph("Shkruaj një ankesë ose kërkesë formale (≈ 80 fjalë). Adreso 3 pika."),
+  emptyLine(),
+  italic("Situata: Du hast in einem Hotel Probleme gehabt. Schreib eine Beschwerde an den Hoteldirektor."),
+  emptyLine(),
+  bold("Punkte:"),
+  normal("• Was war das Problem?"),
+  normal("• Wie hast du dich gefühlt?"),
+  normal("• Was erwartest du als Lösung?"),
+  emptyLine(),
+  normal("Teksti im:"),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  emptyLine(),
+  bold("Fjali të dobishme për ankesë:"),
+  normal("• Ich möchte mich beschweren über..."),
+  normal("• Leider war ich sehr enttäuscht, weil..."),
+  normal("• Ich erwarte eine Entschädigung / Rückerstattung."),
+  normal("• Ich bitte Sie, das Problem so schnell wie möglich zu lösen."),
+  emptyLine(),
+
+  heading2("▶ Aufgabe 3 — Forumsbeitrag / Meinungsäußerung (≈ 100 fjalë)"),
+  boxParagraph("Shkruaj mendimin tënd për një temë. Duhet të japësh argumente PRO dhe CONTRA."),
+  emptyLine(),
+  italic("Tema: Sollten Autos in Innenstädten verboten werden?"),
+  emptyLine(),
+  bold("Struktura e rekomanduar:"),
+  normal("1. Einleitung — Prezanto temën (2-3 fjali)"),
+  normal("2. Argument PRO — jep 1-2 argumente me shembuj"),
+  normal("3. Argument KONTRA — jep 1-2 argumente"),
+  normal("4. Deine Meinung — çfarë mendon ti? (1-2 fjali)"),
+  emptyLine(),
+  normal("Teksti im:"),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  emptyLine(),
+  bold("Fjali kyçe për mendim personal:"),
+  normal("• Meiner Meinung nach...  /  Ich bin der Meinung, dass..."),
+  normal("• Einerseits... andererseits..."),
+  normal("• Zwar... aber...  /  Obwohl..."),
+  normal("• Ich finde es wichtig, dass...  /  Das finde ich (nicht) gut, weil..."),
+  tip("Koha: 20 min E-Mail + 15 min Mitteilung + 25 min Meinungsäußerung = 60 min total."),
+  pageBreak(),
+
+  // ══════════════════════════════════════════════
+  // TEIL 4 — SPRECHEN
+  // ══════════════════════════════════════════════
+  heading1("🗣️ TEIL 4: SPRECHEN — Të folurit (15 min | 30 pikë)"),
+  normal("Sprechen ka 3 pjesë. Bëhet me një partner. Secila vlerësohet nga dy ekzaminues."),
+  emptyLine(),
+
+  heading2("▶ Teil 1 — Über ein Thema sprechen (Monolog ~3 min)"),
+  boxParagraph("Merr një kartë me temë dhe fol rreth saj 3 minuta. Duhet të japësh informacion, opinion dhe shembuj."),
+  emptyLine(),
+  bold("Tema të mundshme:"),
+  normal("• Reisen und Urlaub    • Arbeit und Beruf    • Gesundheit und Sport"),
+  normal("• Familie und Freunde    • Umwelt und Natur    • Technik und Internet"),
+  normal("• Schule und Ausbildung    • Ernährung und Kochen    • Freizeit und Hobbys"),
+  emptyLine(),
+  bold("Tema: Reisen — Ushtrim praktik"),
+  normal("Fol për këto pika:"),
+  normal("1. Wie reist du am liebsten? (Zug, Auto, Flugzeug, Schiff)"),
+  normal("2. Wohin bist du schon gereist?"),
+  normal("3. Was machst du im Urlaub gern?"),
+  normal("4. Was ist deine Traumreise?"),
+  emptyLine(),
+  normal("Shënime / përgatitja ime:"),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  emptyLine(),
+  bold("Fraza të dobishme për monolog:"),
+  normal("• Das Thema, über das ich sprechen möchte, ist..."),
+  normal("• Ich finde das wichtig, weil..."),
+  normal("• Ein gutes Beispiel dafür ist..."),
+  normal("• Außerdem / Darüber hinaus / Zum Schluss möchte ich sagen..."),
+  emptyLine(),
+
+  heading2("▶ Teil 2 — Gemeinsam planen (Dialog ~3 min)"),
+  boxParagraph("Planifiko diçka me partnerin tënd (p.sh. një festë, udhëtim, projekt). Duhet të bësh propozime dhe të bish dakord."),
+  emptyLine(),
+  italic("Situata: Ihr wollt gemeinsam eine Geburtstagsparty für euren Freund organisieren. Plant folgende Punkte:"),
+  emptyLine(),
+  normal("• Wo findet die Party statt? (Wohnung, Restaurant, Park)"),
+  normal("• Wer wird eingeladen?"),
+  normal("• Was wird gegessen und getrunken?"),
+  normal("• Welche Aktivitäten gibt es?"),
+  emptyLine(),
+  bold("Fraza të dobishme për dialog:"),
+  normal("• Was meinst du / Was denkst du dazu?"),
+  normal("• Ich schlage vor, dass wir...  /  Wie wäre es, wenn...?"),
+  normal("• Ich bin damit einverstanden.  /  Das finde ich auch gut."),
+  normal("• Hmm, ich bin nicht sicher ob... vielleicht könnten wir stattdessen..."),
+  normal("• Das ist eine gute Idee, aber..."),
+  emptyLine(),
+
+  heading2("▶ Teil 3 — Sich zu einem Bild äußern (Foto/Bild ~3 min)"),
+  boxParagraph("Shiko një fotografi dhe përshkruje atë: Çfarë shikon? Çfarë mendon për situatën?"),
+  emptyLine(),
+  italic("Ushtro me këtë listë pyetjesh:"),
+  emptyLine(),
+  numberedEx(1, "Was sehen Sie auf dem Bild? (Çfarë shikon?)"),
+  answerLine(""),
+  emptyLine(),
+  numberedEx(2, "Wo befindet sich die Szene? (Ku ndodhet skena?)"),
+  answerLine(""),
+  emptyLine(),
+  numberedEx(3, "Was machen die Personen? (Çfarë bëjnë njerëzit?)"),
+  answerLine(""),
+  emptyLine(),
+  numberedEx(4, "Wie fühlen sich die Personen? (Si ndihen?)"),
+  answerLine(""),
+  emptyLine(),
+  numberedEx(5, "Verbindung zu deinem Leben — Hast du ähnliche Erfahrungen gemacht?"),
+  answerLine(""),
+  emptyLine(),
+  bold("Fraza për përshkrimin e fotos:"),
+  normal("• Auf dem Bild sehe ich...  /  Im Vordergrund / Hintergrund sehe ich..."),
+  normal("• Es scheint, als ob...  /  Ich glaube, dass..."),
+  normal("• Die Person wirkt (glücklich / traurig / gestresst / zufrieden)."),
+  normal("• Das erinnert mich an...  /  In meinem Leben ist das ähnlich, weil..."),
+  tip("Sprechen: Fol qartë dhe ngadalë. Është normale të bësh gabime — vazhdoje fjalinë!"),
+  pageBreak(),
+
+  // ══════════════════════════════════════════════
+  // GRAMMATIK
+  // ══════════════════════════════════════════════
+  heading1("📚 GRAMMATIK — Gramatika B1 (Referenzblatt)"),
+  emptyLine(),
+
+  heading2("▶ Konjunktiv II (Dëftores subjunctive)"),
+  boxParagraph("Përdoret për dëshira, kushte imagjinare dhe kërkesa të sjellshme."),
+  emptyLine(),
+  infoTable([
+    ["Folja", "Konjunktiv II"],
+    ["sein", "wäre / wären"],
+    ["haben", "hätte / hätten"],
+    ["können", "könnte / könnten"],
+    ["müssen", "müsste / müssten"],
+    ["dürfen", "dürfte / dürften"],
+    ["werden", "würde / würden"],
+  ]),
+  emptyLine(),
+  bold("Ushtrime — Schreib den Satz im Konjunktiv II:"),
+  numberedEx(1, 'Ich habe kein Geld. (Wenn ich..., würde ich...)'),
+  answerLine(),
+  numberedEx(2, 'Er ist krank. (Er wünschte, er ______ gesund.)'),
+  answerLine(),
+  numberedEx(3, 'Wir können nicht kommen. (Wenn wir ______, ______.)'),
+  answerLine(),
+  emptyLine(),
+
+  heading2("▶ Relativsätze (Fjali relative)"),
+  boxParagraph("Fjali relative sqaroj cila gjë apo kush person nënkuptohet."),
+  emptyLine(),
+  infoTable([
+    ["Kasus / Gjinia", "der (mask)", "die (fem)", "das (neut)", "die (plur)"],
+    ["Nominativ", "der", "die", "das", "die"],
+    ["Akkusativ", "den", "die", "das", "die"],
+    ["Dativ", "dem", "der", "dem", "denen"],
+  ]),
+  emptyLine(),
+  italic("Shembuj:"),
+  normal("• Das ist der Mann, der jeden Tag Sport macht."),
+  normal("• Das Buch, das ich gelesen habe, war sehr interessant."),
+  normal("• Ich kenne die Frau, der du geholfen hast."),
+  emptyLine(),
+  bold("Ushtrime:"),
+  numberedEx(1, "Das ist das Auto. Es fährt sehr schnell. → Das ist das Auto, _______________"),
+  answerLine(),
+  numberedEx(2, "Ich habe einen Freund. Er wohnt in Berlin. → _______________"),
+  answerLine(),
+  emptyLine(),
+
+  heading2("▶ Passiv (Veta pësore)"),
+  boxParagraph("Passiv = werden + Partizip II. Theksi është te veprimi, jo te kryerësi."),
+  emptyLine(),
+  infoTable([
+    ["Koha", "Formimi", "Shembull"],
+    ["Präsens", "wird + Partizip II", "Das Buch wird gelesen."],
+    ["Präteritum", "wurde + Partizip II", "Das Buch wurde gelesen."],
+    ["Perfekt", "ist + Partizip II + worden", "Das Buch ist gelesen worden."],
+    ["mit Modalverb", "Modalverb + Partizip II + werden", "Das Buch muss gelesen werden."],
+  ]),
+  emptyLine(),
+  bold("Ushtrime — Schreib im Passiv:"),
+  numberedEx(1, 'Man baut eine neue Schule. → Eine neue Schule ________________'),
+  answerLine(),
+  numberedEx(2, 'Die Mitarbeiter haben das Projekt abgeschlossen. → Das Projekt ________________'),
+  answerLine(),
+  emptyLine(),
+
+  heading2("▶ Konnektoren (Lidhëzat)"),
+  emptyLine(),
+  infoTable([
+    ["Funksioni", "Konnektoren", "Shembull"],
+    ["Kauzal (shkak)", "weil, da, denn", "Ich lerne Deutsch, weil es interessant ist."],
+    ["Konzessiv (kundërvënie)", "obwohl, trotzdem", "Obwohl es regnet, gehe ich spazieren."],
+    ["Konditional (kusht)", "wenn, falls", "Wenn ich Zeit habe, komme ich."],
+    ["Temporal (kohë)", "als, wenn, nachdem, bevor", "Nachdem ich gegessen hatte, schlief ich."],
+    ["Final (qëllim)", "damit, um...zu", "Ich lerne, um die Prüfung zu bestehen."],
+    ["Adversativ (kundër)", "aber, jedoch, sondern", "Er ist klein, aber sehr stark."],
+  ]),
+  emptyLine(),
+  bold("Plotëso me Konnektor të duhur:"),
+  numberedEx(1, "Ich gehe früh ins Bett, ________ ich morgen fit bin."),
+  answerLine(),
+  numberedEx(2, "________ das Wetter schlecht war, haben wir Fußball gespielt."),
+  answerLine(),
+  numberedEx(3, "Sie hat den Zug verpasst, ________ sie zu spät aufgestanden ist."),
+  answerLine(),
+  emptyLine(),
+
+  heading2("▶ Zweiteilige Konnektoren (Lidhëzat dyshe)"),
+  emptyLine(),
+  normal("• nicht nur... sondern auch...    (jo vetëm... por edhe...)"),
+  normal("• entweder... oder...              (ose... ose...)"),
+  normal("• weder... noch...                 (as... as...)"),
+  normal("• sowohl... als auch...            (si... ashtu edhe...)"),
+  normal("• zwar... aber...                  (sigurisht... por...)"),
+  emptyLine(),
+  bold("Ushtrime:"),
+  numberedEx(1, "Er spricht ________ Deutsch ________ Englisch. (si njërin ashtu edhe tjetrin)"),
+  answerLine(),
+  numberedEx(2, "Sie kommt ________ Montag ________ Dienstag. (ose... ose)"),
+  answerLine(),
+  pageBreak(),
+
+  // ══════════════════════════════════════════════
+  // WORTSCHATZ
+  // ══════════════════════════════════════════════
+  heading1("📝 WORTSCHATZ — Fjalor tematik B1"),
+  emptyLine(),
+
+  heading2("▶ Tema: Arbeit und Beruf"),
+  emptyLine(),
+  infoTable([
+    ["Deutsch", "Shqip", "Shembull fjalie"],
+    ["die Bewerbung, -en", "aplikim pune", "Ich schicke eine Bewerbung."],
+    ["das Vorstellungsgespräch", "intervistë pune", "Das Gespräch war schwierig."],
+    ["der Arbeitsvertrag", "kontratë pune", "Ich habe einen Vertrag unterschrieben."],
+    ["das Gehalt, -e", "rroga", "Mein Gehalt ist gut."],
+    ["die Überstunden (pl.)", "orë jashtë orarit", "Ich mache oft Überstunden."],
+    ["kündigen", "jap dorëheqje", "Er hat gekündigt."],
+    ["der Betrieb, -e", "ndërmarrje", "Der Betrieb hat 200 Mitarbeiter."],
+  ]),
+  emptyLine(),
+
+  heading2("▶ Tema: Gesundheit"),
+  emptyLine(),
+  infoTable([
+    ["Deutsch", "Shqip", "Shembull fjalie"],
+    ["die Krankenkasse", "sigurim shëndetësor", "Ich bin bei der AOK versichert."],
+    ["der Termin, -e", "takim / caktim", "Ich habe einen Arzttermin."],
+    ["das Rezept, -e", "recetë", "Der Arzt gibt mir ein Rezept."],
+    ["die Apotheke, -n", "farmaci", "Ich hole die Medikamente aus der Apotheke."],
+    ["sich erholen", "pushoj / rikuperohem", "Ich muss mich erholen."],
+    ["die Erkältung", "ftohje", "Ich habe eine starke Erkältung."],
+    ["überweisen", "dërgoj tek specialisti", "Der Arzt überweist mich zum Spezialisten."],
+  ]),
+  emptyLine(),
+
+  heading2("▶ Tema: Wohnen und Umzug"),
+  emptyLine(),
+  infoTable([
+    ["Deutsch", "Shqip", "Shembull fjalie"],
+    ["die Miete, -n", "qira", "Die Miete ist zu hoch."],
+    ["der Vermieter / Mieter", "qiradhënës / qiramarrës", "Der Vermieter ist nett."],
+    ["umziehen (zieht um)", "zhvendosem", "Ich ziehe nächsten Monat um."],
+    ["die Nebenkosten (pl.)", "shpenzime shtesë", "Strom und Wasser sind Nebenkosten."],
+    ["die Kaution", "depozitë", "Ich zahle zwei Monatsmieten Kaution."],
+    ["das Einschreiben", "regjistrim (poste)", "Ich schicke den Brief per Einschreiben."],
+  ]),
+  emptyLine(),
+
+  heading2("▶ Tema: Reisen und Verkehr"),
+  emptyLine(),
+  infoTable([
+    ["Deutsch", "Shqip", "Shembull fjalie"],
+    ["der Anschluss, -e", "lidhja (tren/autobus)", "Ich habe den Anschluss verpasst."],
+    ["die Verspätung", "vonesë", "Der Zug hat 20 Minuten Verspätung."],
+    ["umsteigen", "ndërroj mjet", "Ich muss in München umsteigen."],
+    ["das Gleis, -e", "binari (tren)", "Der Zug fährt auf Gleis 7."],
+    ["die Unterkunft", "akomodim", "Ich suche eine günstige Unterkunft."],
+    ["der Ausflug, -e", "ekskursion", "Wir machen einen Ausflug ins Gebirge."],
+  ]),
+  emptyLine(),
+  tip("Mëso 10 fjalë të reja çdo ditë sipas temës! Shkruaj fjali të plota — jo vetëm fjalët."),
+  pageBreak(),
+
+  // ══════════════════════════════════════════════
+  // TEST SIMULIMI
+  // ══════════════════════════════════════════════
+  heading1("🎯 MINI-TEST SIMULIMI — Provim i plotë"),
+  normal("Bëje këtë test si të ishte provimi i vërtetë. Kontrollo kohën!"),
+  emptyLine(),
+
+  heading2("▶ LESEN — 20 minuta"),
+  italic("Lese den Text und beantworte die Fragen (wähle a, b oder c):"),
+  emptyLine(),
+  normal("Stadtbibliothek Freiburg — Pressemitteilung"),
+  normal("Die Stadtbibliothek Freiburg feiert in diesem Jahr ihr 150-jähriges Bestehen. Aus diesem Anlass werden verschiedene Veranstaltungen organisiert: Lesungen bekannter Autoren, Workshops für Kinder und Jugendliche sowie eine Ausstellung über die Geschichte des Lesens. Die Bibliothek, die täglich von über 500 Besuchern genutzt wird, bietet neben Büchern auch CDs, DVDs und digitale Medien an. Wer sich als Mitglied anmeldet, erhält eine kostenlose Bibliothekskarte und kann bis zu 20 Medien gleichzeitig ausleihen. Besonders beliebt ist der neue Lesesaal mit kostenlosen WLAN und bequemen Sitzmöglichkeiten. Für Schulklassen gibt es spezielle Führungen, bei denen Schüler lernen, wie man effektiv recherchiert."),
+  emptyLine(),
+  numberedEx(1, "Wie alt wird die Stadtbibliothek in diesem Jahr?"),
+  normal("     a) 50 Jahre     b) 100 Jahre     c) 150 Jahre"),
+  emptyLine(),
+  numberedEx(2, "Was kann man in der Bibliothek NICHT ausleihen?"),
+  normal("     a) Bücher     b) Fahrräder     c) DVDs"),
+  emptyLine(),
+  numberedEx(3, "Was bekommt man mit einer Bibliothekskarte?"),
+  normal("     a) Kostenlose Bücher     b) Gratis WLAN     c) Man kann 20 Medien ausleihen"),
+  emptyLine(),
+  numberedEx(4, "Was ist im neuen Lesesaal besonders?"),
+  normal("     a) Es gibt einen Kaffeautomaten     b) Es gibt kostenloses WLAN     c) Es ist nur für Erwachsene"),
+  emptyLine(),
+  numberedEx(5, "Für wen gibt es spezielle Führungen?"),
+  normal("     a) Für Senioren     b) Für Schulklassen     c) Für ausländische Gäste"),
+  emptyLine(),
+
+  heading2("▶ SCHREIBEN — 20 minuta"),
+  italic("Situata: Du wohnst in Deutschland und möchtest deine Wohnung wechseln. Schreib eine E-Mail an ein Wohnungsamt. Erwähne: warum du umziehen willst, was du suchst, wann du einziehen möchtest, dein Budget."),
+  emptyLine(),
+  answerLine("An:"),
+  answerLine("Betreff:"),
+  emptyLine(),
+  normal("Teksti (≈ 80-100 fjalë):"),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  emptyLine(),
+
+  heading2("▶ SPRECHEN — Përgatitja (10 minuta të lexosh, pastaj ushtro me zë)"),
+  italic("Tema: Technologie im Alltag. Fol 3 minuta. Adreso këto pika:"),
+  normal("1. Welche Technologie nutzt du täglich?"),
+  normal("2. Welche Vorteile hat Technologie für dich?"),
+  normal("3. Gibt es auch Nachteile oder Risiken?"),
+  normal("4. Wie war das Leben früher ohne Smartphone?"),
+  emptyLine(),
+  normal("Shënime / idejt e mia:"),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  answerLine(),
+  emptyLine(),
+  italic("✅ Lösungen Mini-Test Lesen: 1-c, 2-b, 3-c, 4-b, 5-b"),
+  pageBreak(),
+
+  // ══════════════════════════════════════════════
+  // STRATEGJI DHE KËSHILLA
+  // ══════════════════════════════════════════════
+  heading1("⚡ STRATEGJI PËR DITËN E TESTIT"),
+  emptyLine(),
+
+  infoTable([
+    ["Pjesa", "Këshilla kryesore"],
+    ["📖 Lesen", "Lexo fillimisht pyetjet, pastaj tekstin. Mos humb kohë në pyetje të vështira — kalo dhe kthehu."],
+    ["👂 Hören", "Shkruaj fjalë kyçe ndërkohë që dëgjon. Lexo pyetjet para audios. Dëgjohet 2 herë!"],
+    ["✍️ Schreiben", "Plan i shkurtër para se të shkruash. Kontrollo: Anrede, Punkte, Schluss, Länge."],
+    ["🗣️ Sprechen", "Fol ngadalë dhe qartë. Nëse gabon, vazhdo — mos ndaloj! Bëj kontakt me sytë."],
+  ]),
+  emptyLine(),
+
+  heading2("▶ Kontrollliste para testit ✅"),
+  normal("□  Kam marrë me vete ID / pasaportën"),
+  normal("□  Kam marrë konfirmimin e regjistrimit (Anmeldebestätigung)"),
+  normal("□  Kam stilolaps dhe laps (disa qendra kërkojnë laps)"),
+  normal("□  Kam ngrënë mirë dhe fjetur mirë natën para"),
+  normal("□  Di ku ndodhet qendra e testimit dhe sa kohë duhet"),
+  normal("□  Kam ardhur 15 minuta para fillimit"),
+  emptyLine(),
+
+  heading2("▶ Pikëzimi — Si vlerësohet testi"),
+  emptyLine(),
+  infoTable([
+    ["Pjesa", "Pikë max", "Pikë min për kalim"],
+    ["Lesen", "45", "23 (51%)"],
+    ["Hören", "30", "15 (50%)"],
+    ["Schreiben", "30", "15 (50%)"],
+    ["Sprechen", "30", "15 (50%)"],
+    ["TOTAL", "135", "81 (60%)"],
+  ]),
+  emptyLine(),
+  tip("Duhet të kalosh ÇDO pjesë veçmas! Nuk mjafton totali i lartë nëse dështon në një pjesë."),
+  emptyLine(),
+  emptyLine(),
+
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 400, after: 200 },
+    children: [
+      new TextRun({ text: "Viel Erfolg beim Goethe B1! — Shumë suksese! 🎉", bold: true, size: 32, font: "Arial", color: BLUE })
+    ]
+  }),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 0, after: 0 },
+    children: [
+      new TextRun({ text: "Du schaffst das! — Ti mundet!", size: 26, font: "Arial", color: MID_BLUE, italics: true })
+    ]
+  }),
+);
+
+// ─────────────────────────────────────────────────────────────
+// BUILD DOCUMENT
+// ─────────────────────────────────────────────────────────────
+
+const doc = new Document({
+  styles: {
+    default: { document: { run: { font: "Arial", size: 22 } } },
+    paragraphStyles: [
+      {
+        id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true,
+        run: { size: 32, bold: true, font: "Arial" },
+        paragraph: { spacing: { before: 400, after: 200 }, outlineLevel: 0 }
+      },
+      {
+        id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true,
+        run: { size: 26, bold: true, font: "Arial" },
+        paragraph: { spacing: { before: 300, after: 120 }, outlineLevel: 1 }
+      }
+    ]
+  },
+  numbering: {
+    config: [
+      {
+        reference: "bullets",
+        levels: [{
+          level: 0, format: LevelFormat.BULLET, text: "•", alignment: AlignmentType.LEFT,
+          style: { paragraph: { indent: { left: 720, hanging: 360 } } }
+        }]
+      }
+    ]
+  },
+  sections: [{
+    properties: {
+      page: {
+        size: { width: 11906, height: 16838 },
+        margin: { top: 1200, right: 1200, bottom: 1200, left: 1440 }
+      }
+    },
+    children
+  }]
 });
 
-// ── ADD CATEGORY ──
-document.getElementById('saveCatBtn').addEventListener('click', async () => {
-  const name = document.getElementById('catName').value.trim();
-  const emoji = document.getElementById('catEmoji').value.trim();
-  const btn = document.getElementById('saveCatBtn');
-
-  if (!name) { showToast('Enter a category name', 'error'); return; }
-
-  const editId = btn.dataset.editId;
-
-  if (editId) {
-    // editing
-    await window._update(window._ref(window._db, 'categories/' + editId), { name, emoji });
-    showToast('Category updated ✓');
-    btn.textContent = 'Add Category';
-    delete btn.dataset.editId;
-    btn.classList.remove('editing');
-  } else {
-    const newRef = window._push(window._ref(window._db, 'categories'));
-    await window._set(newRef, { name, emoji, createdAt: Date.now() });
-    showToast('Category added ✓');
-  }
-
-  document.getElementById('catName').value = '';
-  document.getElementById('catEmoji').value = '';
+Packer.toBuffer(doc).then(buffer => {
+  fs.writeFileSync("/mnt/user-data/outputs/Goethe_B1_Libri_Pune.docx", buffer);
+  console.log("✅ File created successfully!");
+}).catch(err => {
+  console.error("Error:", err);
+  process.exit(1);
 });
-
-// ── ADD PRODUCT ──
-document.getElementById('saveProdBtn').addEventListener('click', async () => {
-  const name = document.getElementById('prodName').value.trim();
-  const imageUrl = document.getElementById('prodImgUrl').value.trim();
-  const affiliateUrl = document.getElementById('prodLink').value.trim();
-  const categoryId = document.getElementById('prodCat').value;
-  const btn = document.getElementById('saveProdBtn');
-
-  if (!name) { showToast('Enter product name', 'error'); return; }
-  if (!affiliateUrl) { showToast('Enter affiliate URL', 'error'); return; }
-  if (!categoryId) { showToast('Select a category', 'error'); return; }
-
-  const editId = btn.dataset.editId;
-
-  if (editId) {
-    await window._update(window._ref(window._db, 'products/' + editId), { name, imageUrl, affiliateUrl, categoryId });
-    showToast('Product updated ✓');
-    btn.textContent = 'Add Product';
-    delete btn.dataset.editId;
-    btn.classList.remove('editing');
-  } else {
-    const newRef = window._push(window._ref(window._db, 'products'));
-    await window._set(newRef, { name, imageUrl, affiliateUrl, categoryId, createdAt: Date.now() });
-    showToast('Product added ✓');
-  }
-
-  document.getElementById('prodName').value = '';
-  document.getElementById('prodImgUrl').value = '';
-  document.getElementById('prodLink').value = '';
-  document.getElementById('prodCat').value = '';
-});
-
-// ── RENDER ADMIN CATS ──
-function renderAdminCats() {
-  const list = document.getElementById('catList');
-  const cats = Object.entries(allCategories);
-  cats.sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
-
-  if (cats.length === 0) {
-    list.innerHTML = `<p style="color:var(--text-muted);font-size:13px;">No categories yet</p>`;
-    return;
-  }
-
-  list.innerHTML = cats.map(([id, cat]) => `
-    <div class="list-item">
-      <span style="font-size:1.3rem">${cat.emoji || '📦'}</span>
-      <div class="list-item-info">
-        <div class="list-item-name">${cat.name}</div>
-        <div class="list-item-sub">${Object.values(allProducts).filter(p => p.categoryId === id).length} products</div>
-      </div>
-      <div class="list-item-actions">
-        <button class="icon-btn edt" title="Edit" onclick="openEditCat('${id}')">✏️</button>
-        <button class="icon-btn del" title="Delete" onclick="deleteCat('${id}')">🗑</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-// ── RENDER ADMIN PRODS ──
-function renderAdminProds() {
-  const list = document.getElementById('prodList');
-  const prods = Object.entries(allProducts);
-  prods.sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
-
-  if (prods.length === 0) {
-    list.innerHTML = `<p style="color:var(--text-muted);font-size:13px;">No products yet</p>`;
-    return;
-  }
-
-  list.innerHTML = prods.map(([id, p]) => {
-    const cat = allCategories[p.categoryId];
-    return `<div class="list-item">
-      <div class="list-item-info">
-        <div class="list-item-name">${p.name}</div>
-        <div class="list-item-sub">${cat ? (cat.emoji + ' ' + cat.name) : 'No category'}</div>
-      </div>
-      <div class="list-item-actions">
-        <button class="icon-btn edt" title="Edit" onclick="openEditProd('${id}')">✏️</button>
-        <button class="icon-btn del" title="Delete" onclick="deleteProd('${id}')">🗑</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ── POPULATE SELECTS ──
-function populateCatSelects() {
-  const cats = Object.entries(allCategories);
-  cats.sort((a, b) => (a[1].name || '').localeCompare(b[1].name || ''));
-  const opts = cats.map(([id, c]) => `<option value="${id}">${c.emoji || ''} ${c.name}</option>`).join('');
-
-  const sel = document.getElementById('prodCat');
-  const val = sel.value;
-  sel.innerHTML = '<option value="">— Select category —</option>' + opts;
-  if (val) sel.value = val;
-
-  const editSel = document.getElementById('editProdCat');
-  const editVal = editSel.value;
-  editSel.innerHTML = '<option value="">— Select category —</option>' + opts;
-  if (editVal) editSel.value = editVal;
-}
-
-// ── DELETE ──
-async function deleteCat(id) {
-  if (!confirm('Delete this category? Products inside will remain.')) return;
-  await window._remove(window._ref(window._db, 'categories/' + id));
-  showToast('Category deleted');
-}
-
-async function deleteProd(id) {
-  if (!confirm('Delete this product?')) return;
-  await window._remove(window._ref(window._db, 'products/' + id));
-  showToast('Product deleted');
-}
-
-// ── EDIT CATEGORY ──
-function openEditCat(id) {
-  const cat = allCategories[id];
-  if (!cat) return;
-  document.getElementById('editCatId').value = id;
-  document.getElementById('editCatName').value = cat.name;
-  document.getElementById('editCatEmoji').value = cat.emoji || '';
-  document.getElementById('editCatModal').classList.add('show');
-}
-
-document.getElementById('cancelEditCat').addEventListener('click', () => {
-  document.getElementById('editCatModal').classList.remove('show');
-});
-
-document.getElementById('saveEditCat').addEventListener('click', async () => {
-  const id = document.getElementById('editCatId').value;
-  const name = document.getElementById('editCatName').value.trim();
-  const emoji = document.getElementById('editCatEmoji').value.trim();
-  if (!name) { showToast('Enter a name', 'error'); return; }
-  await window._update(window._ref(window._db, 'categories/' + id), { name, emoji });
-  document.getElementById('editCatModal').classList.remove('show');
-  showToast('Category updated ✓');
-});
-
-// ── EDIT PRODUCT ──
-function openEditProd(id) {
-  const p = allProducts[id];
-  if (!p) return;
-  populateCatSelects();
-  document.getElementById('editProdId').value = id;
-  document.getElementById('editProdName').value = p.name;
-  document.getElementById('editProdImgUrl').value = p.imageUrl || '';
-  document.getElementById('editProdLink').value = p.affiliateUrl || '';
-  setTimeout(() => { document.getElementById('editProdCat').value = p.categoryId || ''; }, 50);
-  document.getElementById('editProdModal').classList.add('show');
-}
-
-document.getElementById('cancelEditProd').addEventListener('click', () => {
-  document.getElementById('editProdModal').classList.remove('show');
-});
-
-document.getElementById('saveEditProd').addEventListener('click', async () => {
-  const id = document.getElementById('editProdId').value;
-  const name = document.getElementById('editProdName').value.trim();
-  const imageUrl = document.getElementById('editProdImgUrl').value.trim();
-  const affiliateUrl = document.getElementById('editProdLink').value.trim();
-  const categoryId = document.getElementById('editProdCat').value;
-  if (!name) { showToast('Enter a name', 'error'); return; }
-  if (!affiliateUrl) { showToast('Enter affiliate URL', 'error'); return; }
-  if (!categoryId) { showToast('Select a category', 'error'); return; }
-  await window._update(window._ref(window._db, 'products/' + id), { name, imageUrl, affiliateUrl, categoryId });
-  document.getElementById('editProdModal').classList.remove('show');
-  showToast('Product updated ✓');
-});
-
-// ── TRACK CLICK ──
-async function trackClick(productId) {
-  const current = (allClicks[productId] || 0) + 1;
-  await window._update(window._ref(window._db, 'clicks'), { [productId]: current });
-}
-
-// ── RENDER ANALYTICS ──
-function renderAnalytics() {
-  const list = document.getElementById('analyticsList');
-  if (!list) return;
-
-  const prods = Object.entries(allProducts);
-  if (prods.length === 0) {
-    list.innerHTML = `<div class="analytics-empty">No products yet</div>`;
-    return;
-  }
-
-  // merge clicks into products and sort desc
-  const ranked = prods
-    .map(([id, p]) => ({ id, ...p, clicks: allClicks[id] || 0 }))
-    .sort((a, b) => b.clicks - a.clicks);
-
-  const maxClicks = ranked[0].clicks || 1;
-
-  if (ranked.every(p => p.clicks === 0)) {
-    list.innerHTML = `<div class="analytics-empty">🖱 No clicks tracked yet.<br>Clicks will appear here when visitors click products.</div>`;
-    return;
-  }
-
-  list.innerHTML = ranked.map((p, i) => {
-    const cat = allCategories[p.categoryId];
-    const pct = Math.round((p.clicks / maxClicks) * 100);
-    return `<div class="analytics-item">
-      <div class="analytics-rank ${i === 0 ? 'top' : ''}">#${i + 1}</div>
-      <div class="analytics-info">
-        <div class="analytics-name">${p.name}</div>
-        <div class="analytics-cat">${cat ? (cat.emoji + ' ' + cat.name) : '—'}</div>
-        <div class="analytics-bar-wrap">
-          <div class="analytics-bar-bg">
-            <div class="analytics-bar-fill" style="width:${pct}%"></div>
-          </div>
-          <div class="analytics-clicks">${p.clicks} <span>clicks</span></div>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ── RESET CLICKS ──
-document.getElementById('resetClicksBtn').addEventListener('click', async () => {
-  if (!confirm('Reset ALL click counts to zero?')) return;
-  await window._set(window._ref(window._db, 'clicks'), null);
-  showToast('Click data reset ✓');
-});
-
-// expose for inline onclick
-window.goToCategory = goToCategory;
-window.deleteCat = deleteCat;
-window.deleteProd = deleteProd;
-window.openEditCat = openEditCat;
-window.openEditProd = openEditProd;
-window.trackClick = trackClick;
-</script>
-</body>
-</html>
